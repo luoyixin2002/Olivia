@@ -4,20 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>2025 Memory Capsule</title>
+  <!-- CRITICAL: Base href is required for Angular routing and asset loading -->
+  <base href="/">
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <!-- Added Great Vibes for the "Flower/Cursive" font request -->
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
+  
   <script>
-    // POLYFILL: Define 'process' to prevent browser crash
-    window.process = {
-      env: {
-        // If the build tool replaces this string, it will be the key.
-        // If not, it prevents the crash (though AI calls will fail until configured).
-        API_KEY: '' 
-      }
-    };
+    // ROBUST POLYFILL: Define 'process' immediately to prevent crash
+    // This must run before any other script tries to access process.env
+    window.process = window.process || {};
+    window.process.env = window.process.env || {};
+    window.process.env.API_KEY = window.process.env.API_KEY || '';
   </script>
+  
   <script>
     tailwind.config = {
       theme: {
@@ -51,10 +52,34 @@
       font-family: 'Inter', sans-serif;
       background-color: #F2F0E9;
       color: #4A4A4A;
-      user-select: none; /* Prevent text selection during long press */
+      user-select: none;
       -webkit-user-select: none;
+      margin: 0;
+      overflow-x: hidden;
     }
     
+    /* Pre-loader styles (shown while Angular boots) */
+    .app-loading {
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Lora', serif;
+      color: #8E9AAF;
+    }
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(142, 154, 175, 0.2);
+      border-radius: 50%;
+      border-top-color: #8E9AAF;
+      animation: spin 1s ease-in-out infinite;
+      margin-bottom: 20px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
     .fade-in {
       animation: fadeIn 1s ease-out forwards;
     }
@@ -73,35 +98,21 @@
       animation: spin 1s ease-in-out infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
     /* 
        Frosted Glass Capsule Styles 
-       Modified for Matte/Frosted Look + Interaction
     */
     .capsule-bg {
       position: absolute;
       border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
-      
-      /* Base Frosted Look */
       background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
-      
-      /* Matte Border & Depth */
       border: 1px solid rgba(255, 255, 255, 0.4);
       box-shadow: 
-        inset 0 0 40px rgba(255, 255, 255, 0.2), /* Inner glow */
-        0 10px 40px rgba(0, 0, 0, 0.05);         /* Soft drop shadow */
-      
+        inset 0 0 40px rgba(255, 255, 255, 0.2), 
+        0 10px 40px rgba(0, 0, 0, 0.05);
       overflow: hidden;
-      
-      /* Noise Texture Overlay for "Paper/Matte" feel */
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
-      
-      /* Note: We removed the CSS 'animation: float' here because the JellyCapsuleDirective handles movement now */
       transition: border-radius 0.5s ease;
     }
 
@@ -113,10 +124,10 @@
       width: 140%;
       height: 140%;
       background: radial-gradient(circle at center, var(--liquid-color), transparent 60%);
-      opacity: 0.5; /* Slightly higher opacity for matte effect */
+      opacity: 0.5;
       filter: blur(50px);
       animation: liquid-move 8s infinite alternate;
-      pointer-events: none; /* Ensure clicks pass through to container */
+      pointer-events: none;
     }
 
     @keyframes liquid-move {
@@ -124,7 +135,6 @@
       100% { transform: translate(-45%, -55%) scale(1.1); }
     }
     
-    /* Typewriter Cursor */
     .typing-cursor::after {
       content: '|';
       animation: blink 1s step-end infinite;
@@ -137,7 +147,6 @@
       50% { opacity: 0; }
     }
 
-    /* Print/Export Styles */
     .seal-text {
       font-family: 'Ma Shan Zheng', cursive;
       writing-mode: vertical-rl;
@@ -145,11 +154,8 @@
       letter-spacing: 0.2em;
     }
 
-    /* 
-       NEW: Realistic Paper Texture for the Letter 
-    */
     .paper-texture {
-      background-color: #F9F7F2; /* Warm paper white */
+      background-color: #F9F7F2;
       position: relative;
     }
     .paper-texture::before {
@@ -162,7 +168,6 @@
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
     }
 
-    /* Unlock Shake Animation */
     .shake-gentle {
       animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both infinite;
     }
@@ -174,7 +179,6 @@
       40%, 60% { transform: translate3d(2px, 0, 0); }
     }
     
-    /* Reveal Animation for Capsule Open */
     .capsule-open-top {
       animation: slideUp 0.8s ease-out forwards;
     }
@@ -189,7 +193,6 @@
       to { transform: translateY(100%) scale(0.9); opacity: 0; }
     }
 
-    /* Particle Animations */
     .particle-drop {
       animation: dropBounce 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) backwards;
     }
@@ -229,6 +232,13 @@
 </script>
 </head>
 <body>
-  <app-root></app-root>
+  <app-root>
+    <!-- Fallback content if Angular doesn't load -->
+    <div class="app-loading">
+      <div class="loading-spinner"></div>
+      <p>正在唤醒记忆胶囊...</p>
+      <p style="font-size: 10px; opacity: 0.5; margin-top: 5px;">Waking up Memory Capsule...</p>
+    </div>
+  </app-root>
 </body>
 </html>
