@@ -2,6 +2,9 @@
 import { Injectable } from '@angular/core';
 import { GoogleGenAI, GenerateContentResponse, Chat } from '@google/genai';
 
+// Declare process for Vite's define replacement to work without TS errors
+declare const process: any;
+
 @Injectable({
   providedIn: 'root'
 })
@@ -14,15 +17,32 @@ export class GeminiService {
   }
 
   private init() {
-    // Robustly access API_KEY, handling potential window/process shim issues
-    const apiKey = (window as any).process?.env?.API_KEY || '';
+    let apiKey = '';
     
-    if (!apiKey || apiKey === 'MISSING_KEY') {
+    // 1. Try getting from Vite Build/Env injection (Best for Vercel)
+    try {
+      // @ts-ignore
+      apiKey = process.env.API_KEY || '';
+    } catch (e) {
+      // Ignore reference errors if process is not defined
+    }
+
+    // 2. Fallback to Window Shim (Best for local index.html editing)
+    if (!apiKey || apiKey === 'undefined') {
+      apiKey = (window as any).process?.env?.API_KEY || '';
+    }
+
+    // Debug Log (First 4 chars only for security)
+    const keyStatus = apiKey && apiKey.length > 10 ? `Present (${apiKey.substring(0,4)}...)` : 'MISSING';
+    console.log(`[GeminiService] Initializing. API Key Status: ${keyStatus}`);
+    
+    if (!apiKey || apiKey === 'MISSING_KEY' || apiKey === 'undefined') {
       console.warn('GeminiService: No API Key found. Switching to DEMO MODE.');
       this.isDemoMode = true;
     } else {
       try {
         this._ai = new GoogleGenAI({ apiKey: apiKey });
+        this.isDemoMode = false;
       } catch (e) {
         console.error('GeminiService: Failed to initialize. Switching to DEMO MODE.', e);
         this.isDemoMode = true;
@@ -34,14 +54,14 @@ export class GeminiService {
     if (!this._ai && !this.isDemoMode) {
         this.init();
     }
-    // Return a dummy object if in demo mode to satisfy TS, though we won't use it.
+    // Return a dummy object if in demo mode to satisfy TS
     return this._ai as GoogleGenAI;
   }
 
   async generateInspiration(questionText: string): Promise<string> {
     if (this.isDemoMode) {
       await this.delay(1000); // Simulate network
-      return `(演示模式 / Demo Mode)\nExample 1: 在那个时刻，我感到了久违的宁静。\nExample 2: 即使是微小的光芒，也照亮了我的整晚。`;
+      return `(演示模式 / Demo Mode)\n灵感示例 1: 在那个时刻，我感到了久违的宁静。\n灵感示例 2: 即使是微小的光芒，也照亮了我的整晚。`;
     }
 
     const prompt = `
@@ -69,7 +89,6 @@ export class GeminiService {
       return response.text.trim();
     } catch (error) {
       console.error('Gemini API Error:', error);
-      // Fallback in case of API error even if key exists
       return "灵感连接中断，请相信你内心的直觉。 (Connection failed, trust your intuition.)";
     }
   }
@@ -128,7 +147,6 @@ export class GeminiService {
         });
     } catch (error) {
         console.error("API Error during review generation", error);
-        // Fallback to mock if API fails mid-flight
         return this.getMockAnalysisResult();
     }
   }

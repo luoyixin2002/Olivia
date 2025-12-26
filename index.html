@@ -18,7 +18,15 @@
   <script>
     window.process = window.process || {};
     window.process.env = window.process.env || {};
-    window.process.env.API_KEY = window.process.env.API_KEY || ''; 
+    
+    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
+    // 【在这里填入你的 API Key】
+    // 如果你在本地运行，可以直接把 Key 粘贴在引号里，例如 'AIzaSy...'
+    // 如果你在 Vercel 部署，请保持为空 ''，并在 Vercel 后台设置 Environment Variable
+    const MANUAL_API_KEY = ''; 
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+    window.process.env.API_KEY = MANUAL_API_KEY || window.process.env.API_KEY || ''; 
   </script>
   
   <script>

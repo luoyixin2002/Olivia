@@ -1,3 +1,4 @@
+
 import { defineConfig } from 'vite';
 
 export default defineConfig({
@@ -22,7 +23,8 @@ export default defineConfig({
     }
   },
   // This allows process.env.API_KEY to be replaced by the Vercel Environment Variable during build
+  // We use a safe fallback to empty string to prevent 'undefined' string replacement
   define: {
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || '')
   }
 });
