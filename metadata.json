@@ -1,0 +1,8 @@
+{
+  "name": "2025 Memory Capsule",
+  "description": "A warm, minimalist interactive journey to review your 2025. Answer 20 deep questions and let AI generate a psychological portrait and a touching end-of-year letter.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
