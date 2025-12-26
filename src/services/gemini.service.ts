@@ -6,10 +6,21 @@ import { GoogleGenAI, GenerateContentResponse, Chat } from '@google/genai';
   providedIn: 'root'
 })
 export class GeminiService {
-  private ai: GoogleGenAI;
+  private _ai: GoogleGenAI | null = null;
 
-  constructor() {
-    this.ai = new GoogleGenAI({ apiKey: process.env['API_KEY'] });
+  constructor() {}
+
+  // Lazy initialization to prevent app crash at startup if key is missing
+  private get ai(): GoogleGenAI {
+    if (!this._ai) {
+      const apiKey = process.env['API_KEY'];
+      if (!apiKey) {
+        console.error('API Key is missing. Please check your environment variables.');
+        // We return a dummy or let the SDK throw, but at least the app has booted.
+      }
+      this._ai = new GoogleGenAI({ apiKey: apiKey || 'MISSING_KEY' });
+    }
+    return this._ai;
   }
 
   async generateInspiration(questionText: string): Promise<string> {
@@ -30,11 +41,16 @@ export class GeminiService {
       Example 2: ...
     `;
 
-    const response = await this.ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: prompt,
-    });
-    return response.text.trim();
+    try {
+      const response = await this.ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+      });
+      return response.text.trim();
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      throw error;
+    }
   }
 
   async generateYearReview(answers: Record<string, string>, colorContext: string): Promise<GenerateContentResponse> {

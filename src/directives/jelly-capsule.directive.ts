@@ -1,9 +1,16 @@
-
-import { Directive, ElementRef, HostListener, Input, NgZone, OnDestroy, OnInit } from '@angular/core';
+import { Directive, ElementRef, Input, NgZone, OnDestroy, OnInit } from '@angular/core';
 
 @Directive({
   selector: '[appJellyCapsule]',
-  standalone: true
+  standalone: true,
+  host: {
+    '(mousedown)': 'onStart($event)',
+    '(touchstart)': 'onStart($event)',
+    '(document:mousemove)': 'onMove($event)',
+    '(document:touchmove)': 'onMove($event)',
+    '(document:mouseup)': 'onEnd()',
+    '(document:touchend)': 'onEnd()'
+  }
 })
 export class JellyCapsuleDirective implements OnInit, OnDestroy {
   @Input() stiffness = 0.05; // Spring tension
@@ -54,8 +61,6 @@ export class JellyCapsuleDirective implements OnInit, OnDestroy {
     }
   }
 
-  @HostListener('mousedown', ['$event'])
-  @HostListener('touchstart', ['$event'])
   onStart(event: MouseEvent | TouchEvent) {
     this.isDragging = true;
     this.el.nativeElement.style.cursor = 'grabbing';
@@ -74,8 +79,6 @@ export class JellyCapsuleDirective implements OnInit, OnDestroy {
     this.startY = clientY - this.currentY;
   }
 
-  @HostListener('document:mousemove', ['$event'])
-  @HostListener('document:touchmove', ['$event'])
   onMove(event: MouseEvent | TouchEvent) {
     if (!this.isDragging) return;
 
@@ -86,8 +89,6 @@ export class JellyCapsuleDirective implements OnInit, OnDestroy {
     this.targetY = clientY - this.startY;
   }
 
-  @HostListener('document:mouseup')
-  @HostListener('document:touchend')
   onEnd() {
     if (!this.isDragging) return;
     this.isDragging = false;
