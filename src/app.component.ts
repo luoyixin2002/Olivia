@@ -70,7 +70,8 @@ export class AppComponent implements OnDestroy {
   
   // Audio State
   isAudioPlaying = signal(false);
-  hasAudioSource = signal(true); // Default to true because we provide a default track
+  // Default to false (pessimistic) - only set true if 'canplay' fires
+  hasAudioSource = signal(false); 
   private audio: HTMLAudioElement;
 
   readonly colorOptions: YearColor[] = [
@@ -324,11 +325,24 @@ export class AppComponent implements OnDestroy {
     this.audio.loop = true;
     this.audio.volume = 0.5;
     
-    // UPDATED: Use local file path (Relative path for GitHub Pages compatibility)
-    // Make sure you have uploaded the file to 'src/assets/bgm.mp3' in your repository
-    this.audio.src = 'assets/bgm.mp3'; 
+    const audioPath = 'assets/bgm.mp3';
+    this.audio.src = audioPath;
+    
+    // Improved Error Handling: Default is now "Not Found" until proven otherwise.
+    this.audio.onerror = (e) => {
+      console.warn(`Could not load audio from ${audioPath}.`, e);
+      this.hasAudioSource.set(false);
+      
+      // If we are in the browser and the error is real 404, we might want to alert if user tries to play
+      // But signals handle the UI update automatically.
+    };
+
+    // Only when we are SURE we can play, we enable the feature.
+    this.audio.oncanplay = () => {
+      this.hasAudioSource.set(true);
+    };
+
     this.audio.load();
-    this.hasAudioSource.set(true); 
   }
 
   ngOnDestroy() {
@@ -337,15 +351,26 @@ export class AppComponent implements OnDestroy {
   }
 
   toggleAudio() {
+    // If hasAudioSource is false, it means loading failed or file missing.
+    // Trigger upload immediately.
     if (!this.hasAudioSource()) {
-      // If no audio, trigger file upload
+      alert("无法加载默认音乐 (assets/bgm.mp3)。\n请检查文件是否上传，或现在手动选择一首本地音乐。");
       this.bgmInput.nativeElement.click();
       return;
     }
 
     if (this.audio.paused) {
-      this.audio.play().catch(e => console.log('Playback prevented', e));
-      this.isAudioPlaying.set(true);
+      this.audio.play().then(() => {
+         this.isAudioPlaying.set(true);
+      }).catch(e => {
+         console.warn('Playback prevented', e);
+         // If error is NotSupported or NotAllowed, it's autoplay policy.
+         // If error is 404 related (sometimes shows as encoding error), fallback to upload.
+         if (e.code === 4) { // NotSupportedError (often missing source)
+             this.hasAudioSource.set(false);
+             this.bgmInput.nativeElement.click();
+         }
+      });
     } else {
       this.audio.pause();
       this.isAudioPlaying.set(false);
@@ -360,6 +385,7 @@ export class AppComponent implements OnDestroy {
       
       this.audio.src = objectUrl;
       this.audio.load();
+      // Force true because user just selected a valid file
       this.hasAudioSource.set(true);
       
       this.audio.play().then(() => {
@@ -375,8 +401,7 @@ export class AppComponent implements OnDestroy {
   currentQuestion = computed(() => this.questions[this.currentStep()]);
 
   startJourney() {
-    // Attempt to play audio if loaded, usually browser blocks this until user interaction
-    // Since this is a click handler, it might work if source is set.
+    // Attempt to play audio if loaded
     if (this.hasAudioSource() && this.audio.paused) {
         this.toggleAudio();
     }
