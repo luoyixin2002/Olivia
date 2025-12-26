@@ -324,9 +324,9 @@ export class AppComponent implements OnDestroy {
     this.audio.loop = true;
     this.audio.volume = 0.5;
     
-    // Default BGM (Online Source). 
-    // To bundle offline, place your file in src/assets/ and change this to 'assets/your-music.mp3'
-    this.audio.src = 'https://cdn.pixabay.com/audio/2022/03/10/audio_c8c8a73467.mp3'; 
+    // UPDATED: Use local file path (Relative path for GitHub Pages compatibility)
+    // Make sure you have placed the file at src/assets/bgm.mp3
+    this.audio.src = 'assets/bgm.mp3'; 
     this.audio.load();
     this.hasAudioSource.set(true); 
   }
