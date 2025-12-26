@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,13 +10,16 @@
   
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <!-- Polyfill for Import Maps (Essential for compatibility) -->
+  <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
   
   <script>
     // ROBUST POLYFILL: Define 'process' immediately to prevent crash
     window.process = window.process || {};
     window.process.env = window.process.env || {};
-    window.process.env.API_KEY = window.process.env.API_KEY || '';
+    window.process.env.API_KEY = window.process.env.API_KEY || ''; // Will be populated by build/env
   </script>
   
   <script>
@@ -215,14 +219,28 @@
     .load-error {
       color: #B94E48;
       margin-top: 20px;
-      font-size: 14px;
-      max-width: 320px;
+      font-size: 13px;
+      max-width: 90%;
       text-align: center;
       display: none; /* Hidden by default */
-      background: rgba(255,255,255,0.8);
-      padding: 15px;
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
       border-radius: 8px;
       border: 1px solid #E3DCD2;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .error-detail {
+      font-family: monospace;
+      font-size: 11px;
+      background: #f8f8f8;
+      padding: 8px;
+      margin-top: 10px;
+      border-radius: 4px;
+      color: #333;
+      text-align: left;
+      white-space: pre-wrap;
+      max-height: 100px;
+      overflow-y: auto;
     }
   </style>
 
@@ -253,29 +271,53 @@
       <div class="loading-spinner"></div>
       <p>正在唤醒记忆胶囊...</p>
       <p style="font-size: 10px; opacity: 0.5; margin-top: 5px;">Waking up Memory Capsule...</p>
+      
       <div class="load-error" id="load-error-msg">
-        <p><strong>启动出错 (Startup Error)</strong></p>
-        <p class="text-xs mt-2 text-left">
-           1. 请检查网络连接 (Check Network)<br>
-           2. 可能是浏览器版本过低 (Browser Version)<br>
-           3. CDN 资源加载失败 (CDN Error)
+        <p><strong>启动似乎遇到了问题 (Startup Issue)</strong></p>
+        <p class="text-xs mt-2 mb-2">
+           请尝试刷新页面。如果问题持续，请查看下方详情。
         </p>
+        <div class="error-detail" id="error-text">No details available.</div>
       </div>
     </div>
   </app-root>
   
   <!-- Explicitly include main.ts for environments that don't auto-inject -->
+  <!-- NOTE: If you are building with Angular CLI, this line is ignored/replaced. -->
+  <!-- If you are using a No-Build environment, this line is critical. -->
   <script type="module" src="./src/main.ts"></script>
 
   <script>
-    // Simple timeout to show error message if Angular doesn't take over in 8 seconds
+    // Global Error Handler to display errors on screen for debugging
+    window.onerror = function(msg, url, line, col, error) {
+      const errorMsg = document.getElementById('load-error-msg');
+      const errorText = document.getElementById('error-text');
+      const loader = document.querySelector('.loading-spinner');
+      
+      if (errorMsg && errorText) {
+         errorMsg.style.display = 'block';
+         if(loader) loader.style.display = 'none';
+         
+         const cleanMsg = msg.replace('Uncaught ', '');
+         errorText.textContent = `${cleanMsg}\n\nLocation: ${url}:${line}`;
+         console.error('Captured Global Error:', error);
+      }
+      return false; 
+    };
+
+    // Timeout fallback
     setTimeout(() => {
       const appRoot = document.querySelector('app-root');
       const errorMsg = document.getElementById('load-error-msg');
+      const errorText = document.getElementById('error-text');
+      
       if (appRoot && appRoot.children.length > 0 && errorMsg) {
-         // If app-root still has children, it means Angular hasn't cleared the loading content
-         errorMsg.style.display = 'block';
-         console.warn('App load timeout triggered');
+         // Only show if we haven't already caught an error (display is still none)
+         if (getComputedStyle(errorMsg).display === 'none') {
+             errorMsg.style.display = 'block';
+             errorText.textContent = "Timeout: Angular did not bootstrap within 8 seconds.\nCheck console for network errors.";
+             console.warn('App load timeout triggered');
+         }
       }
     }, 8000);
   </script>
