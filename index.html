@@ -254,12 +254,13 @@
     "rxjs/webSocket": "https://esm.sh/rxjs@^7.8.2/webSocket?conditions=es2015",
     "rxjs/testing": "https://esm.sh/rxjs@^7.8.2/testing?conditions=es2015",
     "rxjs/fetch": "https://esm.sh/rxjs@^7.8.2/fetch?conditions=es2015",
+    "tslib": "https://esm.sh/tslib@^2.8.0",
     "@google/genai": "https://esm.sh/@google/genai@0.2.0?external=rxjs",
-    "@angular/compiler": "https://esm.sh/@angular/compiler@19.1.0?target=es2022&external=rxjs",
-    "@angular/common": "https://esm.sh/@angular/common@19.1.0?target=es2022&external=rxjs",
-    "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@19.1.0?target=es2022&external=rxjs",
-    "@angular/forms": "https://esm.sh/@angular/forms@19.1.0?target=es2022&external=rxjs",
-    "@angular/core": "https://esm.sh/@angular/core@19.1.0?target=es2022&external=rxjs"
+    "@angular/compiler": "https://esm.sh/@angular/compiler@19.1.0?target=es2022&external=rxjs&external=tslib",
+    "@angular/common": "https://esm.sh/@angular/common@19.1.0?target=es2022&external=rxjs&external=tslib",
+    "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@19.1.0?target=es2022&external=rxjs&external=tslib",
+    "@angular/forms": "https://esm.sh/@angular/forms@19.1.0?target=es2022&external=rxjs&external=tslib",
+    "@angular/core": "https://esm.sh/@angular/core@19.1.0?target=es2022&external=rxjs&external=tslib"
   }
 }
 </script>
@@ -305,7 +306,7 @@
       return false; 
     };
 
-    // Timeout fallback
+    // Timeout fallback (Increased to 15s for slower networks)
     setTimeout(() => {
       const appRoot = document.querySelector('app-root');
       const errorMsg = document.getElementById('load-error-msg');
@@ -315,11 +316,11 @@
          // Only show if we haven't already caught an error (display is still none)
          if (getComputedStyle(errorMsg).display === 'none') {
              errorMsg.style.display = 'block';
-             errorText.textContent = "Timeout: Angular did not bootstrap within 8 seconds.\nCheck console for network errors.";
+             errorText.textContent = "Timeout: Angular did not bootstrap within 15 seconds.\nCheck console for network errors.";
              console.warn('App load timeout triggered');
          }
       }
-    }, 8000);
+    }, 15000);
   </script>
 </body>
 </html>

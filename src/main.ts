@@ -1,3 +1,4 @@
+import '@angular/compiler'; // CRITICAL: Required for JIT compilation in browser
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideExperimentalZonelessChangeDetection } from '@angular/core';
 import { AppComponent } from './app.component';
