@@ -10,8 +10,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
-  <!-- Shim for Import Maps (using cdnjs for better availability) -->
-  <script async src="https://cdnjs.cloudflare.com/ajax/libs/es-module-shims/1.10.0/es-module-shims.min.js"></script>
+  <!-- FIX: Replaced cdnjs with unpkg for better reliability in some regions -->
+  <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
   
@@ -20,13 +20,16 @@
     window.process.env = window.process.env || {};
     
     // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    // 【在这里填入你的 API Key】
-    // 如果你在本地运行，可以直接把 Key 粘贴在引号里，例如 'AIzaSy...'
-    // 如果你在 Vercel 部署，请保持为空 ''，并在 Vercel 后台设置 Environment Variable
+    // 【重要提示 / IMPORTANT】
+    // 1. 如果你在本地测试：请将你的 Key 粘贴在下方的单引号中，例如 'AIzaSy...'
+    // 2. 如果你在 Vercel 部署：请保持此处为空 ''，去 Vercel 后台设置 Environment Variable
     const MANUAL_API_KEY = ''; 
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
     window.process.env.API_KEY = MANUAL_API_KEY || window.process.env.API_KEY || ''; 
+    
+    // Immediate Debug Check
+    console.log('[HTML] API Key Check:', window.process.env.API_KEY ? '✅ Present' : '❌ Missing (Fill in index.html for local dev)');
   </script>
   
   <script>
