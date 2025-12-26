@@ -325,7 +325,7 @@ export class AppComponent implements OnDestroy {
     this.audio.volume = 0.5;
     
     // UPDATED: Use local file path (Relative path for GitHub Pages compatibility)
-    // Make sure you have placed the file at src/assets/bgm.mp3
+    // Make sure you have uploaded the file to 'src/assets/bgm.mp3' in your repository
     this.audio.src = 'assets/bgm.mp3'; 
     this.audio.load();
     this.hasAudioSource.set(true); 
