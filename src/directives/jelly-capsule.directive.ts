@@ -1,4 +1,5 @@
-import { Directive, ElementRef, Input, NgZone, OnDestroy, OnInit } from '@angular/core';
+
+import { Directive, ElementRef, Input, OnDestroy, OnInit } from '@angular/core';
 
 @Directive({
   selector: '[appJellyCapsule]',
@@ -42,17 +43,12 @@ export class JellyCapsuleDirective implements OnInit, OnDestroy {
 
   private rafId: any;
 
-  constructor(private el: ElementRef, private ngZone: NgZone) {}
+  constructor(private el: ElementRef) {}
 
   ngOnInit() {
-    // Run physics loop outside Angular zone to prevent change detection overhead
-    this.ngZone.runOutsideAngular(() => {
-      this.loop();
-    });
-    
-    // Set initial cursor style
     this.el.nativeElement.style.cursor = 'grab';
     this.el.nativeElement.style.touchAction = 'none'; // Prevent scroll on mobile
+    this.loop();
   }
 
   ngOnDestroy() {
@@ -74,7 +70,6 @@ export class JellyCapsuleDirective implements OnInit, OnDestroy {
     const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
 
     // Calculate offset from the element's center to avoid jumping
-    // We treat the current visual position as the anchor
     this.startX = clientX - this.currentX;
     this.startY = clientY - this.currentY;
   }
@@ -125,20 +120,13 @@ export class JellyCapsuleDirective implements OnInit, OnDestroy {
     this.currentY += this.velocityY;
 
     // 3. Physics: Squeeze/Stretch based on Velocity
-    // The faster it moves, the more it stretches in movement direction
-    // Logic: Conservation of volume (scaleX * scaleY ≈ 1)
-    
-    // Calculate speed magnitude
     const speed = Math.sqrt(this.velocityX * this.velocityX + this.velocityY * this.velocityY);
     const maxStretch = 0.3; // Max deformation
     const stretchFactor = 0.02;
 
-    // Target scale based on movement
-    // Note: A real jelly skews, but simple scaling looks good enough for UI bubbles
     let targetScaleX = 1 + Math.min(Math.abs(this.velocityX) * stretchFactor, maxStretch) - Math.min(Math.abs(this.velocityY) * stretchFactor, maxStretch);
     let targetScaleY = 1 + Math.min(Math.abs(this.velocityY) * stretchFactor, maxStretch) - Math.min(Math.abs(this.velocityX) * stretchFactor, maxStretch);
     
-    // Apply Spring to Scale as well (wobbly effect)
     const scaleForceX = (targetScaleX - this.scaleX) * 0.1;
     const scaleForceY = (targetScaleY - this.scaleY) * 0.1;
 
@@ -152,7 +140,6 @@ export class JellyCapsuleDirective implements OnInit, OnDestroy {
     this.scaleY += this.velocityScaleY;
 
     // 4. Apply Transform
-    // Rotate slightly based on X velocity to simulate "leaning"
     const rotate = this.velocityX * 2; 
 
     const transform = `

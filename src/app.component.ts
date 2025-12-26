@@ -1,5 +1,4 @@
-
-import { Component, signal, inject, computed, ElementRef, ViewChild, OnDestroy } from '@angular/core';
+import { Component, signal, inject, computed, ElementRef, ViewChild, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { QuestionCardComponent, Question } from './components/question-card.component';
 import { GeminiService } from './services/gemini.service';
@@ -50,6 +49,7 @@ interface MemoryParticle {
 @Component({
   selector: 'app-root',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, QuestionCardComponent, JellyCapsuleDirective],
   template: `
 <div class="min-h-screen w-full relative overflow-x-hidden flex flex-col items-center justify-center p-6 bg-morandi-bg text-morandi-text">
@@ -636,7 +636,7 @@ interface MemoryParticle {
 
   </main>
 </div>
-`
+  `
 })
 export class AppComponent implements OnDestroy {
   private geminiService = inject(GeminiService);

@@ -6,4 +6,6 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideExperimentalZonelessChangeDetection()
   ]
-}).catch(err => console.error(err));
+}).then(() => {
+  console.log('Angular App Bootstrapped Successfully');
+}).catch(err => console.error('Bootstrap Error:', err));

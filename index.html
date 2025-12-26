@@ -215,14 +215,18 @@
     .load-error {
       color: #B94E48;
       margin-top: 20px;
-      font-size: 12px;
-      max-width: 300px;
+      font-size: 14px;
+      max-width: 320px;
       text-align: center;
       display: none; /* Hidden by default */
+      background: rgba(255,255,255,0.8);
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #E3DCD2;
     }
   </style>
 
-<!-- Using Stable Angular v19.1.0 -->
+<!-- Using Stable Angular v19.1.0 with es2022 target for robust exports -->
 <script type="importmap">
 {
   "imports": {
@@ -233,11 +237,11 @@
     "rxjs/testing": "https://esm.sh/rxjs@^7.8.2/testing?conditions=es2015",
     "rxjs/fetch": "https://esm.sh/rxjs@^7.8.2/fetch?conditions=es2015",
     "@google/genai": "https://esm.sh/@google/genai@0.2.0?external=rxjs",
-    "@angular/compiler": "https://esm.sh/@angular/compiler@19.1.0?external=rxjs",
-    "@angular/common": "https://esm.sh/@angular/common@19.1.0?external=rxjs",
-    "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@19.1.0?external=rxjs",
-    "@angular/forms": "https://esm.sh/@angular/forms@19.1.0?external=rxjs",
-    "@angular/core": "https://esm.sh/@angular/core@19.1.0?external=rxjs"
+    "@angular/compiler": "https://esm.sh/@angular/compiler@19.1.0?target=es2022&external=rxjs",
+    "@angular/common": "https://esm.sh/@angular/common@19.1.0?target=es2022&external=rxjs",
+    "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@19.1.0?target=es2022&external=rxjs",
+    "@angular/forms": "https://esm.sh/@angular/forms@19.1.0?target=es2022&external=rxjs",
+    "@angular/core": "https://esm.sh/@angular/core@19.1.0?target=es2022&external=rxjs"
   }
 }
 </script>
@@ -250,9 +254,12 @@
       <p>正在唤醒记忆胶囊...</p>
       <p style="font-size: 10px; opacity: 0.5; margin-top: 5px;">Waking up Memory Capsule...</p>
       <div class="load-error" id="load-error-msg">
-        <p>启动似乎遇到了问题。</p>
-        <p>请尝试刷新页面，或检查网络控制台 (F12)。</p>
-        <p style="opacity: 0.7; margin-top: 5px;">Angular Load Timeout or API Key Error</p>
+        <p><strong>启动出错 (Startup Error)</strong></p>
+        <p class="text-xs mt-2 text-left">
+           1. 请检查网络连接 (Check Network)<br>
+           2. 可能是浏览器版本过低 (Browser Version)<br>
+           3. CDN 资源加载失败 (CDN Error)
+        </p>
       </div>
     </div>
   </app-root>
@@ -263,10 +270,12 @@
   <script>
     // Simple timeout to show error message if Angular doesn't take over in 8 seconds
     setTimeout(() => {
+      const appRoot = document.querySelector('app-root');
       const errorMsg = document.getElementById('load-error-msg');
-      if (document.querySelector('app-root').children.length > 0 && errorMsg) {
+      if (appRoot && appRoot.children.length > 0 && errorMsg) {
          // If app-root still has children, it means Angular hasn't cleared the loading content
          errorMsg.style.display = 'block';
+         console.warn('App load timeout triggered');
       }
     }, 8000);
   </script>

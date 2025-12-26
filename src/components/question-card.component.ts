@@ -128,19 +128,22 @@ export class QuestionCardComponent implements OnDestroy {
 
   constructor() {
     effect(() => {
+      // Track dependencies
       const q = this.question();
-      this.displayedText.set(''); // Clear immediately
+      const initAns = this.initialAnswer();
+
+      // Reset displayed text for typewriter
+      this.displayedText.set(''); 
       
-      // Small delay to ensure clean state before starting
+      // Update local answer state from input prop
+      this.currentAnswer.set(initAns || '');
+
+      // Small delay to ensure clean state before starting typewriter
+      if (this.typeInterval) clearInterval(this.typeInterval);
       setTimeout(() => {
          this.typeWriterEffect(q.textZh);
       }, 50);
     });
-  }
-
-  // Sync initial answer when question changes
-  ngOnChanges() {
-    this.currentAnswer.set(this.initialAnswer() || '');
   }
 
   ngOnDestroy() {

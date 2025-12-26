@@ -13,10 +13,11 @@ export class GeminiService {
   // Lazy initialization to prevent app crash at startup if key is missing
   private get ai(): GoogleGenAI {
     if (!this._ai) {
-      const apiKey = process.env['API_KEY'];
+      // Robustly access API_KEY, handling potential window/process shim issues
+      const apiKey = (window as any).process?.env?.API_KEY || '';
+      
       if (!apiKey) {
         console.error('API Key is missing. Please check your environment variables.');
-        // We return a dummy or let the SDK throw, but at least the app has booted.
       }
       this._ai = new GoogleGenAI({ apiKey: apiKey || 'MISSING_KEY' });
     }
@@ -61,10 +62,6 @@ export class GeminiService {
       **CRITICAL CONTEXT - EMOTIONAL TONE**:
       The user has defined their year's color as: "${colorContext}".
       You MUST adjust the writing style and emotional temperature of the letter to match this color.
-      - If it's Warm (Orange/Red): Be embracing, passionate, mentioning warmth, fire, sunset.
-      - If it's Cool (Blue/Cyan): Be calm, deep, intellectual, mentioning sea, night, clarity.
-      - If it's Green: Be healing, growing, mentioning plants, breath, rain.
-      - If it's Gray: Be stoic, minimalist, rational, quiet.
       
       Here are the user's answers:
       ${JSON.stringify(answers, null, 2)}
@@ -74,9 +71,8 @@ export class GeminiService {
       2. **CLOSING**: The letter MUST end exactly with these words: "在 2026 的入口处，请带上这份勇气。"
       3. **FORBIDDEN WORDS**: You are STRICTLY FORBIDDEN from using the words "希望" (hope), "快乐" (happy), "成功" (success), "加油" (jiayou). These are too generic. Instead use words like "安宁" (peace), "赤诚" (sincerity), "抵达" (arrival), "舒展" (unfold), "自洽" (self-consistent).
       4. **LENGTH**: The letter MUST be around 400 Chinese characters. Concise, profound, and impactful.
-      5. **BE SPECIFIC**: Quote specific details from their answers (the object, the smell, the anxiety). Connect these dots.
-      6. **FIND TENSION**: Analyze the conflict between their "Regrets" and "Achievements".
-      7. **KEYWORDS**: Extract 3 distinct 2-character or 4-character Chinese keywords.
+      5. **BE SPECIFIC**: Quote specific details from their answers. Connect these dots.
+      6. **KEYWORDS**: Extract 3 distinct 2-character or 4-character Chinese keywords.
 
       Please generate a response in valid JSON format with the following structure:
       {
@@ -91,10 +87,10 @@ export class GeminiService {
           "emotionalTone": "The overall emotional color of their year..."
         },
         "letterTitle": "A Creative, Non-Generic Title (Chinese)",
-        "letterBody": "A ~400 word letter in Chinese. Narrative prose. Structure it like a real letter. Don't use bullet points. Make it flow like water."
+        "letterBody": "A ~400 word letter in Chinese. Narrative prose. Structure it like a real letter."
       }
       
-      Do not include markdown formatting like \`\`\`json. Just return the raw JSON string.
+      IMPORTANT: Return ONLY valid JSON. No markdown code blocks.
     `;
 
     return this.ai.models.generateContent({
