@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,6 +8,16 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <!-- Added Great Vibes for the "Flower/Cursive" font request -->
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
+  <script>
+    // POLYFILL: Define 'process' to prevent browser crash
+    window.process = {
+      env: {
+        // If the build tool replaces this string, it will be the key.
+        // If not, it prevents the crash (though AI calls will fail until configured).
+        API_KEY: '' 
+      }
+    };
+  </script>
   <script>
     tailwind.config = {
       theme: {
