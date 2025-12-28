@@ -1,4 +1,3 @@
-import 'zone.js'; // Critical for browser compatibility in this setup
 import '@angular/compiler'; // Critical for JIT compilation
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideZonelessChangeDetection } from '@angular/core';
