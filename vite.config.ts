@@ -5,6 +5,8 @@ export default defineConfig({
   build: {
     target: 'es2022',
     outDir: 'dist',
+    // Increase limit to 1.5MB to silence warnings for Angular core bundles
+    chunkSizeWarningLimit: 1500,
     commonjsOptions: {
       transformMixedEsModules: true,
     },
