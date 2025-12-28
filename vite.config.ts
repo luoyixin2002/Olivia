@@ -5,15 +5,28 @@ export default defineConfig({
   build: {
     target: 'es2022',
     outDir: 'dist',
+    commonjsOptions: {
+      transformMixedEsModules: true,
+    },
+  },
+  // Optimize dependencies to prevent Rollup trace errors with Angular
+  optimizeDeps: {
+    include: [
+      '@angular/core',
+      '@angular/common',
+      '@angular/compiler',
+      '@angular/platform-browser',
+      '@angular/forms',
+      'rxjs',
+      'zone.js'
+    ]
   },
   esbuild: {
-    // Critical for Angular to work without the official plugin
     target: 'es2022',
     keepNames: true,
     supported: {
       'top-level-await': true
     },
-    // These ensure decorators are transpiled in a way Angular JIT understands
     tsconfigRaw: {
       compilerOptions: {
         experimentalDecorators: true,
@@ -22,6 +35,9 @@ export default defineConfig({
     }
   },
   define: {
-    'process.env.API_KEY': JSON.stringify(process.env.API_KEY || '')
+    // Safely inject the process.env object with the API Key for Vercel
+    'process.env': {
+      API_KEY: process.env.API_KEY || ''
+    }
   }
 });

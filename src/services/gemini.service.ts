@@ -19,7 +19,7 @@ interface ChatResponse {
   providedIn: 'root'
 })
 export class GeminiService {
-  // Use DeepSeek API URL
+  // DeepSeek V3 Endpoint
   private readonly API_URL = 'https://api.deepseek.com/chat/completions';
   private apiKey: string = '';
   private isDemoMode = false;
@@ -31,16 +31,18 @@ export class GeminiService {
   private init() {
     let key = '';
 
-    // 1. Try getting from Vite Build/Env injection
+    // Vercel / Vite Environment Variable Handling
+    // Vite replaces 'process.env.API_KEY' with the actual string during build.
+    // We access it directly so the replacement works.
     try {
       // @ts-ignore
-      if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
-        // @ts-ignore
-        key = process.env.API_KEY;
+      const envKey = process.env.API_KEY;
+      if (envKey && typeof envKey === 'string' && envKey.length > 0) {
+        key = envKey;
       }
     } catch (e) {}
 
-    // 2. Fallback to Window Shim (often used in simple HTML wrappers)
+    // Fallback: Check window shim (often used in simple HTML wrappers or local dev)
     if (!key) {
       try {
         key = (window as any).process?.env?.API_KEY || '';
@@ -49,12 +51,12 @@ export class GeminiService {
 
     this.apiKey = key;
 
-    // Debug Log
+    // Debug Log (Masked)
     const keyStatus = this.apiKey && this.apiKey.length > 5 ? `Present (${this.apiKey.substring(0,4)}...)` : 'MISSING';
     console.log(`[DeepSeek Service] Initializing. API Key: ${keyStatus}`);
     
     if (!this.apiKey || this.apiKey === 'undefined') {
-      console.warn('DeepSeek Service: No API Key found. Switching to DEMO/OFFLINE MODE.');
+      console.warn('DeepSeek Service: No API Key found. Make sure to set API_KEY in Vercel Environment Variables.');
       this.isDemoMode = true;
     }
   }
@@ -73,9 +75,9 @@ export class GeminiService {
           'Authorization': `Bearer ${this.apiKey}`
         },
         body: JSON.stringify({
-          model: 'deepseek-chat', // or 'deepseek-reasoner' for R1, but chat is faster/cheaper
+          model: 'deepseek-chat', 
           messages: messages,
-          temperature: temperature, // Higher temperature for more poetic/creative results
+          temperature: temperature, 
           response_format: jsonMode ? { type: 'json_object' } : { type: 'text' },
           stream: false
         })
@@ -120,7 +122,7 @@ export class GeminiService {
       const result = await this.callDeepSeek([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: `关于这个问题：“${questionText}”，请给我一点灵感。` }
-      ], 1.2); // High temp for creativity
+      ], 1.2); 
       return result.trim();
     } catch (error) {
       return "灵感连接中断，请相信你内心的直觉。\n(Connection interrupted, trust your intuition.)";
@@ -170,12 +172,12 @@ export class GeminiService {
     `;
 
     try {
+      // Explicitly mention JSON in system prompt for DeepSeek JSON mode
       const result = await this.callDeepSeek([
-        { role: 'system', content: '你是一个输出 JSON 格式的专业作家助手。' },
+        { role: 'system', content: '你是一个输出 JSON 格式的专业作家助手。请确保输出合法的 JSON 字符串。' },
         { role: 'user', content: prompt }
       ], 1.1, true); // JSON Mode = true
       
-      // DeepSeek returns stringified JSON, structure it like the Google SDK response for compatibility
       return {
         text: result
       };
@@ -193,7 +195,6 @@ export class GeminiService {
       return "（离线模式）你的这一年充满了故事，我能感受到你在其中的成长与变化。";
     }
 
-    // Convert history format from Gemini (role/parts) to OpenAI (role/content)
     const messages: ChatMessage[] = [
       { 
         role: 'system', 
@@ -201,7 +202,6 @@ export class GeminiService {
       }
     ];
 
-    // Map history (skipping the first context dump usually stored in history[0] if it's huge, or keeping it)
     history.forEach(h => {
       messages.push({
         role: h.role === 'model' ? 'assistant' : 'user',
@@ -209,7 +209,6 @@ export class GeminiService {
       });
     });
 
-    // Add current message
     messages.push({ role: 'user', content: message });
 
     try {
@@ -220,15 +219,10 @@ export class GeminiService {
     }
   }
 
-  // --- Helpers ---
-
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  /**
-   * 兜底数据：如果API调用失败，返回这个高质量的预设模版，保证用户体验闭环。
-   */
   private getMockAnalysisResult(colorContext: string): any {
       const isWarm = colorContext.toLowerCase().includes('warm') || colorContext.toLowerCase().includes('nature');
       
