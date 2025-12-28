@@ -17,13 +17,20 @@ export class GeminiService {
     let apiKey = '';
     
     // 1. Try getting from Vite Build/Env injection (Best for Vercel)
+    // We use explicit process.env.API_KEY so Vite's 'define' plugin can replace this exact string literal.
     try {
-      // Safely check if process exists before accessing
-      if (typeof process !== 'undefined' && process.env) {
-        apiKey = process.env['API_KEY'] || '';
+      // Use a temporary variable to allow Vite string replacement
+      // If process.env.API_KEY is replaced by "my-key", this line becomes: const envKey = "my-key";
+      // We purposefully access it directly, but wrap in try-catch in case 'process' is totally missing in some odd runtime
+      // although Vite usually replaces the whole 'process.env.API_KEY' token.
+      
+      // Use 'as any' to avoid TS errors if types are missing, but rely on Vite replacement
+      const envKey = (process as any).env.API_KEY; 
+      if (envKey) {
+        apiKey = envKey;
       }
     } catch (e) {
-      // Ignore reference errors
+      // Ignore
     }
 
     // 2. Fallback to Window Shim (Best for local index.html editing)

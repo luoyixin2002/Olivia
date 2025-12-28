@@ -5,26 +5,10 @@ export default defineConfig({
   build: {
     target: 'es2022',
     outDir: 'dist',
-    rollupOptions: {
-      // CRITICAL: We tell Vite NOT to bundle these, because they are loaded via CDN (esm.sh) in index.html
-      // This keeps the build extremely fast and light.
-      external: [
-        '@angular/core',
-        '@angular/common',
-        '@angular/compiler',
-        '@angular/platform-browser',
-        '@angular/forms',
-        '@google/genai',
-        'rxjs',
-        'rxjs/operators',
-        'zone.js',
-        'tslib'
-      ]
-    }
+    // REMOVED: rollupOptions with external. We now want to BUNDLE everything.
   },
-  // This allows process.env.API_KEY to be replaced by the Vercel Environment Variable during build
-  // We use a safe fallback to empty string to prevent 'undefined' string replacement
   define: {
+    // This allows Vite to perform static replacement of process.env.API_KEY string
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY || '')
   }
 });

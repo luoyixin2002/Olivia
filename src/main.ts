@@ -1,14 +1,14 @@
 import 'zone.js'; // Critical for browser compatibility in this setup
 import '@angular/compiler'; // Critical for JIT compilation
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideExperimentalZonelessChangeDetection } from '@angular/core';
+import { provideZonelessChangeDetection } from '@angular/core';
 import { AppComponent } from './app.component';
 
 console.log('Main.ts: Starting bootstrap sequence...');
 
 bootstrapApplication(AppComponent, {
   providers: [
-    provideExperimentalZonelessChangeDetection()
+    provideZonelessChangeDetection()
   ]
 }).then(() => {
   console.log('Main.ts: Bootstrap success');
