@@ -2,9 +2,6 @@
 import { Injectable } from '@angular/core';
 import { GoogleGenAI, GenerateContentResponse, Chat } from '@google/genai';
 
-// Declare process for Vite's define replacement to work without TS errors
-declare const process: any;
-
 @Injectable({
   providedIn: 'root'
 })
@@ -21,15 +18,19 @@ export class GeminiService {
     
     // 1. Try getting from Vite Build/Env injection (Best for Vercel)
     try {
-      // @ts-ignore
-      apiKey = process.env.API_KEY || '';
+      // Safely check if process exists before accessing
+      if (typeof process !== 'undefined' && process.env) {
+        apiKey = process.env['API_KEY'] || '';
+      }
     } catch (e) {
-      // Ignore reference errors if process is not defined
+      // Ignore reference errors
     }
 
     // 2. Fallback to Window Shim (Best for local index.html editing)
     if (!apiKey || apiKey === 'undefined') {
-      apiKey = (window as any).process?.env?.API_KEY || '';
+      try {
+        apiKey = (window as any).process?.env?.API_KEY || '';
+      } catch (e) {}
     }
 
     // Debug Log (First 4 chars only for security)

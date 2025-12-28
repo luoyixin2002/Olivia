@@ -1,4 +1,5 @@
-import { Component, signal, inject, computed, ElementRef, ViewChild, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+
+import { Component, signal, inject, computed, ElementRef, ViewChild, OnDestroy, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { QuestionCardComponent, Question } from './components/question-card.component';
 import { GeminiService } from './services/gemini.service';
@@ -636,9 +637,9 @@ interface MemoryParticle {
 
   </main>
 </div>
-  `
+`
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent implements OnInit, OnDestroy {
   private geminiService = inject(GeminiService);
 
   @ViewChild('reportNode') reportNode!: ElementRef;
@@ -657,7 +658,7 @@ export class AppComponent implements OnDestroy {
   isAudioPlaying = signal(false);
   // Default to false (pessimistic) - only set true if 'canplay' fires
   hasAudioSource = signal(false); 
-  private audio: HTMLAudioElement;
+  private audio: HTMLAudioElement | null = null;
 
   readonly colorOptions: YearColor[] = [
     {
@@ -906,36 +907,45 @@ export class AppComponent implements OnDestroy {
   ];
 
   constructor() {
-    this.audio = new Audio();
-    this.audio.loop = true;
-    this.audio.volume = 0.5;
-    
-    const audioPath = 'assets/bgm.mp3';
-    this.audio.src = audioPath;
-    
-    // Improved Error Handling: Default is now "Not Found" until proven otherwise.
-    this.audio.onerror = (e) => {
-      console.warn(`Could not load audio from ${audioPath}.`, e);
-      this.hasAudioSource.set(false);
+    try {
+      this.audio = new Audio();
+      this.audio.loop = true;
+      this.audio.volume = 0.5;
       
-      // If we are in the browser and the error is real 404, we might want to alert if user tries to play
-      // But signals handle the UI update automatically.
-    };
+      const audioPath = 'assets/bgm.mp3';
+      this.audio.src = audioPath;
+      
+      this.audio.onerror = (e) => {
+        console.warn(`Could not load audio from ${audioPath}.`, e);
+        this.hasAudioSource.set(false);
+      };
 
-    // Only when we are SURE we can play, we enable the feature.
-    this.audio.oncanplay = () => {
-      this.hasAudioSource.set(true);
-    };
+      this.audio.oncanplay = () => {
+        this.hasAudioSource.set(true);
+      };
 
-    this.audio.load();
+      this.audio.load();
+    } catch (e) {
+      console.warn("Audio initialization failed completely. App will continue silent.", e);
+      this.hasAudioSource.set(false);
+    }
+  }
+  
+  ngOnInit() {
+    // Force view refresh in case constructor state was missed
+    this.viewState.set('intro');
   }
 
   ngOnDestroy() {
-    this.audio.pause();
-    this.audio.src = '';
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
+    }
   }
 
   toggleAudio() {
+    if (!this.audio) return;
+    
     // If hasAudioSource is false, it means loading failed or file missing.
     // Trigger upload immediately.
     if (!this.hasAudioSource()) {
@@ -963,6 +973,7 @@ export class AppComponent implements OnDestroy {
   }
 
   onBgmFileSelected(event: Event) {
+    if (!this.audio) return;
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
@@ -987,7 +998,7 @@ export class AppComponent implements OnDestroy {
 
   startJourney() {
     // Attempt to play audio if loaded
-    if (this.hasAudioSource() && this.audio.paused) {
+    if (this.audio && this.hasAudioSource() && this.audio.paused) {
         this.toggleAudio();
     }
     

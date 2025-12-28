@@ -10,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   
-  <!-- FIX: Replaced cdnjs with unpkg for better reliability in some regions -->
+  <!-- FIX: Use unpkg for shim reliability -->
   <script async src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
   
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
@@ -18,18 +18,9 @@
   <script>
     window.process = window.process || {};
     window.process.env = window.process.env || {};
-    
-    // ▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼▼
-    // 【重要提示 / IMPORTANT】
-    // 1. 如果你在本地测试：请将你的 Key 粘贴在下方的单引号中，例如 'AIzaSy...'
-    // 2. 如果你在 Vercel 部署：请保持此处为空 ''，去 Vercel 后台设置 Environment Variable
+    // Use this for local development if needed:
     const MANUAL_API_KEY = ''; 
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
-
     window.process.env.API_KEY = MANUAL_API_KEY || window.process.env.API_KEY || ''; 
-    
-    // Immediate Debug Check
-    console.log('[HTML] API Key Check:', window.process.env.API_KEY ? '✅ Present' : '❌ Missing (Fill in index.html for local dev)');
   </script>
   
   <script>
@@ -53,17 +44,21 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #F2F0E9; color: #4A4A4A; margin: 0; overflow-x: hidden; }
-    .app-loading { height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Lora', serif; color: #8E9AAF; }
+    
+    /* Ensure content is visible even if Tailwind/Animations fail */
+    app-root main { opacity: 1 !important; z-index: 10 !important; position: relative; }
+    
+    .app-loading { height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Lora', serif; color: #8E9AAF; z-index: 9999; position: fixed; top: 0; left: 0; background: #F2F0E9; }
     .loading-spinner { width: 40px; height: 40px; border: 3px solid rgba(142, 154, 175, 0.2); border-radius: 50%; border-top-color: #8E9AAF; animation: spin 1s ease-in-out infinite; margin-bottom: 20px; }
     @keyframes spin { to { transform: rotate(360deg); } }
     
     /* Error Console */
-    .load-error { display: none; margin-top: 20px; max-width: 90%; background: rgba(255,255,255,0.95); padding: 24px; border-radius: 8px; border: 1px solid #B94E48; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 9999; color: #333; }
+    .load-error { display: none; position: fixed; bottom: 20px; left: 5%; width: 90%; background: rgba(255,255,255,0.95); padding: 24px; border-radius: 8px; border: 1px solid #B94E48; box-shadow: 0 4px 12px rgba(0,0,0,0.1); z-index: 10000; color: #333; }
     .error-title { color: #B94E48; font-weight: bold; font-size: 14px; margin-bottom: 8px; }
     .error-detail { font-family: monospace; font-size: 11px; background: #f0f0f0; padding: 10px; margin-top: 10px; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; max-height: 150px; text-align: left; }
     .retry-btn { margin-top: 15px; padding: 8px 20px; background-color: #8E9AAF; color: white; border-radius: 4px; font-size: 12px; cursor: pointer; border: none; }
     
-    /* Styles from previous steps... */
+    /* Visuals */
     .capsule-bg { position: absolute; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255, 255, 255, 0.4); overflow: hidden; }
     .capsule-liquid { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 140%; height: 140%; background: radial-gradient(circle at center, var(--liquid-color), transparent 60%); opacity: 0.5; filter: blur(50px); animation: liquid-move 8s infinite alternate; }
     @keyframes liquid-move { 0% { transform: translate(-50%, -50%) scale(1); } 100% { transform: translate(-45%, -55%) scale(1.1); } }
@@ -107,23 +102,17 @@
     <div class="app-loading" id="loading-container">
       <div class="loading-spinner"></div>
       <p>正在连接记忆库...</p>
-      <p style="font-size: 10px; opacity: 0.5; margin-top: 5px;">Connecting to Memory Database...</p>
       
       <!-- Network Status Indicator -->
       <div id="network-status" style="margin-top: 10px; font-size: 9px; opacity: 0.6; font-family: monospace;">
-        Checking CDN connectivity...
+        Initializing Environment...
       </div>
 
       <div class="load-error" id="load-error-msg">
-        <div class="error-title">启动失败 (Startup Failed)</div>
+        <div class="error-title">启动异常 (Startup Error)</div>
         <p class="text-xs text-morandi-text">
-           这通常是网络问题导致的资源加载失败。
+           检测到运行错误。这通常是因为网络环境导致资源加载失败。
         </p>
-        <ul class="text-[11px] text-left list-disc pl-4 text-morandi-text/80 mb-3 space-y-1 mt-2">
-           <li>请检查是否开启了 <strong>VPN/代理</strong> (Google API & CDN 需要)。</li>
-           <li>请尝试<strong>刷新页面</strong>。</li>
-           <li>Detailed error below:</li>
-        </ul>
         <div class="error-detail" id="error-text">No details yet.</div>
         <button class="retry-btn" onclick="window.location.reload()">刷新重试 (Reload)</button>
       </div>
@@ -131,69 +120,33 @@
   </app-root>
 
   <script>
-    // 1. Connectivity Check
-    const statusEl = document.getElementById('network-status');
-    const img = new Image();
-    img.onload = () => { if(statusEl) statusEl.textContent = 'CDN (esm.sh) is reachable.'; statusEl.style.color = 'green'; };
-    img.onerror = () => { if(statusEl) statusEl.textContent = 'Warning: CDN (esm.sh) might be blocked.'; statusEl.style.color = '#B94E48'; };
-    img.src = 'https://esm.sh/favicon.ico?' + Date.now(); // Pixel check
-
-    // 2. Global Error Capture (Including Syntax/Network errors)
+    // 1. Global Error Capture
     window.addEventListener('error', function(event) {
       const errorMsg = document.getElementById('load-error-msg');
       const errorText = document.getElementById('error-text');
       const loader = document.querySelector('.loading-spinner');
-      const statusEl = document.getElementById('network-status');
       
       if (errorMsg && errorText) {
          errorMsg.style.display = 'block';
          if(loader) loader.style.display = 'none';
-         if(statusEl) statusEl.style.display = 'none';
 
          let message = event.message || 'Unknown Error';
-         if (event.filename) {
-            message += `\nFile: ${event.filename}`;
-         }
-         if (event.lineno) {
-            message += `\nLine: ${event.lineno}`;
-         }
-         // If it's a script loading error
          if (event.target && (event.target.tagName === 'SCRIPT' || event.target.tagName === 'LINK')) {
             message = `Resource Failed to Load: ${event.target.src || event.target.href}`;
          }
-
          errorText.textContent = message;
       }
-    }, true); // Capture phase is essential for resource loading errors
+    }, true);
 
-    // 3. Unhandled Promise Rejection
+    // 2. Unhandled Promise Rejection
     window.addEventListener('unhandledrejection', function(event) {
       const errorMsg = document.getElementById('load-error-msg');
       const errorText = document.getElementById('error-text');
-      const loader = document.querySelector('.loading-spinner');
-      
       if (errorMsg && errorText) {
          errorMsg.style.display = 'block';
-         if(loader) loader.style.display = 'none';
          errorText.textContent = `Promise Rejection: ${event.reason}`;
       }
     });
-
-    // 4. Manual Timeout Fallback
-    setTimeout(() => {
-      const appRoot = document.querySelector('app-root');
-      const errorMsg = document.getElementById('load-error-msg');
-      const errorText = document.getElementById('error-text');
-      const loader = document.querySelector('.loading-spinner');
-      
-      if (appRoot && appRoot.children.length > 0 && errorMsg) {
-         if (getComputedStyle(errorMsg).display === 'none') {
-             errorMsg.style.display = 'block';
-             if(loader) loader.style.display = 'none';
-             errorText.textContent = "CRITICAL TIMEOUT (>60s).\nAngular failed to bootstrap.\n\nPossible causes:\n1. Network blocked (CDN unreachable)\n2. JavaScript execution stalled\n3. Missing dependencies";
-         }
-      }
-    }, 60000);
   </script>
 
   <!-- Load Main Script -->
