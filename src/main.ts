@@ -1,17 +1,14 @@
-import '@angular/compiler'; // Critical for JIT compilation
+import 'zone.js'; // Standard Angular Change Detection
+import '@angular/compiler';
 import { bootstrapApplication } from '@angular/platform-browser';
-import { provideZonelessChangeDetection } from '@angular/core';
 import { AppComponent } from './app.component';
 
 console.log('Main.ts: Starting bootstrap sequence...');
 
 bootstrapApplication(AppComponent, {
-  providers: [
-    provideZonelessChangeDetection()
-  ]
+  providers: []
 }).then(() => {
   console.log('Main.ts: Bootstrap success');
-  // Remove loading screen if Angular succeeds
   const loader = document.getElementById('loading-container');
   if (loader) loader.style.display = 'none';
 }).catch(err => {
