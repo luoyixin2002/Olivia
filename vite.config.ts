@@ -5,10 +5,23 @@ export default defineConfig({
   build: {
     target: 'es2022',
     outDir: 'dist',
-    // REMOVED: rollupOptions with external. We now want to BUNDLE everything.
+  },
+  esbuild: {
+    // Critical for Angular to work without the official plugin
+    target: 'es2022',
+    keepNames: true,
+    supported: {
+      'top-level-await': true
+    },
+    // These ensure decorators are transpiled in a way Angular JIT understands
+    tsconfigRaw: {
+      compilerOptions: {
+        experimentalDecorators: true,
+        useDefineForClassFields: false
+      }
+    }
   },
   define: {
-    // This allows Vite to perform static replacement of process.env.API_KEY string
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY || '')
   }
 });
