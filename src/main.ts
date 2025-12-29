@@ -1,19 +1,17 @@
 
-import 'zone.js'; // Standard Angular Change Detection
+import 'zone.js';
 import '@angular/compiler';
 import { bootstrapApplication } from '@angular/platform-browser';
 import { AppComponent } from './app.component';
 
-console.log('Main.ts: Starting bootstrap sequence...');
+console.log('App starting...');
 
-// Bootstrapping without experimental providers to ensure stability
 bootstrapApplication(AppComponent, {
   providers: []
 }).then(() => {
-  console.log('Main.ts: Bootstrap success');
+  console.log('Angular App Bootstrapped');
   const loader = document.getElementById('loading-container');
   if (loader) loader.style.display = 'none';
 }).catch(err => {
-  console.error('Main.ts: Bootstrap failed', err);
-  throw err;
+  console.error('Bootstrap failed', err);
 });
