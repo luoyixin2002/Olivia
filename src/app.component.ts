@@ -5,6 +5,7 @@ import { QuestionCardComponent, Question } from './components/question-card.comp
 import { GeminiService } from './services/gemini.service';
 import { JellyCapsuleDirective } from './directives/jelly-capsule.directive';
 
+// Declare html2canvas globally as it is loaded via script tag
 declare var html2canvas: any;
 
 interface AnalysisResult {
@@ -22,23 +23,27 @@ interface YearColor {
   id: string;
   name: string;
   desc: string;
+  // Visuals
   previewClass: string;
+  // CSS Gradients for the capsule
   capsuleTop: string;
   capsuleBottom: string;
+  // AI Context
   aiContext: string;
+  // Particle Type for visual feedback
   particleType: 'stone' | 'feather'; 
-  particleColor: string;
+  particleColor: string; // CSS color string
 }
 
 interface MemoryParticle {
   id: number;
   type: 'stone' | 'feather';
-  left: number;
-  bottom: number;
+  left: number; // percentage or px offset
+  bottom: number; // px offset
   rotation: number;
   scale: number;
   color: string;
-  borderRadius?: string;
+  borderRadius?: string; // for stones
   animationDelay: string;
 }
 
@@ -47,27 +52,6 @@ interface MemoryParticle {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, QuestionCardComponent, JellyCapsuleDirective],
-  styles: [`
-    .particle-drop { animation: dropIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-    @keyframes dropIn { from { transform: translateY(-50px) scale(0); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
-    .particle-float { animation: float 3s ease-in-out infinite; }
-    @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(5deg); } }
-    .animate-spin-slow { animation: spin 8s linear infinite; }
-    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-    .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
-    @keyframes blink { 50% { opacity: 0; } }
-    .fade-in { animation: fadeIn 0.8s ease-out forwards; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .capsule-bg { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.6; }
-    .capsule-liquid { width: 100%; height: 100%; background: var(--liquid-color); border-radius: 50%; animation: liquidMorph 10s infinite alternate; }
-    @keyframes liquidMorph { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
-    .paper-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E"); }
-    .shake-gentle { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
-    .writing-vertical-rl { writing-mode: vertical-rl; text-orientation: upright; }
-    .capsule-open-top { transform: translateY(-40px); }
-    .capsule-open-bottom { transform: translateY(40px); }
-  `],
   template: `
 <div class="min-h-screen w-full relative overflow-x-hidden flex flex-col items-center justify-center p-6 bg-morandi-bg text-morandi-text">
   
@@ -90,15 +74,8 @@ interface MemoryParticle {
     </div>
   </div>
 
-  <!-- API KEY WARNING BANNER -->
-  @if(isDemoMode()) {
-    <div class="fixed top-0 left-0 w-full bg-morandi-red/90 text-white text-[10px] md:text-xs py-1 px-4 text-center z-[100] tracking-widest font-sans">
-       ⚠️ DEMO MODE: API Key Not Found. (Using Mock Data)
-    </div>
-  }
-
   <!-- FLOATING MUSIC PLAYER (Top Right) -->
-  <div class="fixed top-6 right-6 z-50 flex flex-col items-end gap-2 fade-in" [class.mt-6]="isDemoMode()">
+  <div class="fixed top-6 right-6 z-50 flex flex-col items-end gap-2 fade-in">
      <div class="flex items-center gap-2">
        <!-- Local File Input (Hidden) -->
        <input type="file" #bgmInput (change)="onBgmFileSelected($event)" accept="audio/*" class="hidden">
@@ -154,7 +131,7 @@ interface MemoryParticle {
 
   <main class="relative z-10 w-full max-w-5xl flex flex-col items-center pointer-events-none">
     <!-- Header (Minimalist) -->
-    <header class="absolute top-0 left-0 w-full flex justify-center py-8 pointer-events-none" [class.mt-8]="isDemoMode()">
+    <header class="absolute top-0 left-0 w-full flex justify-center py-8 pointer-events-none">
       <div class="flex flex-col items-center gap-2">
          <span class="text-[10px] md:text-xs tracking-[0.4em] uppercase text-morandi-text/40 font-sans">Project 2025</span>
       </div>
@@ -367,10 +344,6 @@ interface MemoryParticle {
         <div class="w-16 h-16 border-t-2 border-b-2 border-morandi-dark/30 rounded-full animate-spin mb-8"></div>
         <h3 class="text-xl md:text-2xl font-serif text-morandi-dark mb-4 tracking-widest">正在打捞记忆...</h3>
         <p class="text-xs font-sans uppercase tracking-[0.2em] text-morandi-text/40">Weaving your story</p>
-        
-        @if(isDemoMode()) {
-            <p class="text-xs text-morandi-red mt-4">(Generating Mock Data...)</p>
-        }
       </div>
     }
 
@@ -385,15 +358,14 @@ interface MemoryParticle {
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
               </svg>
-              重写
+              New Journey
            </button>
 
            <button (click)="generateReport()" [disabled]="isGeneratingReport()" class="bg-morandi-dark text-white px-8 py-3 rounded-sm text-xs uppercase tracking-widest hover:bg-morandi-accent transition-colors flex items-center gap-2 shadow-sm">
              @if(isGeneratingReport()) {
                 <span class="animate-spin">⟳</span>
              } @else {
-                <!-- Updated for WeChat sharing context -->
-                <span>保存胶囊卡片</span>
+                <span>SAVE MEMORY</span>
              }
            </button>
         </div>
@@ -421,22 +393,32 @@ interface MemoryParticle {
               }
             </article>
             
-            <!-- Updated Seal -->
+            <!-- Updated Seal: No Birds, Large Floral Number -->
              <div class="flex justify-end mt-16 opacity-90 relative z-10">
                 <div class="w-40 h-40 flex items-center justify-center relative rotate-[-6deg] opacity-80 mix-blend-multiply text-morandi-red">
                    <!-- Texture/Roughness -->
                    <div class="absolute inset-0 rounded-full border-[3px] border-morandi-red/40 border-dashed opacity-50"></div>
                    
                    <svg viewBox="0 0 200 200" class="w-full h-full p-2" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round">
+                      
+                      <!-- Stars Group (Sparkle Shape - Concave Curves) -->
                       <path d="M100 20 C 102 40 110 45 120 48 C 110 51 102 56 100 76 C 98 56 90 51 80 48 C 90 45 98 40 100 20 Z" />
                       <path d="M100 130 C 103 150 115 155 130 158 C 115 161 103 166 100 186 C 97 166 85 161 70 158 C 85 155 97 150 100 130 Z" />
                       <path d="M50 60 C 51 65 55 67 60 68 C 55 69 51 71 50 76 C 49 71 45 69 40 68 C 45 67 49 65 50 60 Z" />
                       <path d="M150 50 C 151 55 155 57 160 58 C 155 59 151 61 150 66 C 149 61 145 59 140 58 C 145 57 149 55 150 50 Z" />
+
+                      <!-- Removed Swallows -->
+
+                      <!-- Decor Dots -->
                       <circle cx="80" cy="80" r="1.5" fill="currentColor" stroke="none" />
                       <circle cx="120" cy="70" r="1.5" fill="currentColor" stroke="none" />
                       <circle cx="160" cy="140" r="1" fill="currentColor" stroke="none" />
                       <circle cx="40" cy="150" r="1" fill="currentColor" stroke="none" />
+
+                      <!-- Large Floral 2025 -->
                       <text x="100" y="115" text-anchor="middle" font-family="'Great Vibes', cursive" font-weight="normal" font-size="55" fill="currentColor" stroke="none">2025</text>
+                      
+                      <!-- Text Memory -->
                       <text x="100" y="145" text-anchor="middle" font-family="'Ma Shan Zheng', cursive" font-size="16" fill="currentColor" stroke="none" letter-spacing="2">Memory</text>
                    </svg>
                 </div>
@@ -634,7 +616,7 @@ interface MemoryParticle {
                        <span class="md:hidden">Long Press Image to Save</span>
                        <span class="hidden md:inline">2025 Memory</span>
                     </p>
-                    <p class="md:hidden text-xs text-morandi-dark mt-1 font-serif opacity-80">长按图片保存到相册分享朋友圈</p>
+                    <p class="md:hidden text-xs text-morandi-dark mt-1 font-serif opacity-80">长按图片保存到相册</p>
                  </div>
                  
                  <div class="flex gap-4">
@@ -643,7 +625,7 @@ interface MemoryParticle {
                       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M12 12.75l-3 3m0 0 3 3m-3-3h7.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                       </svg>
-                      保存图片
+                      Download
                    </button>
                  </div>
                </div>
@@ -658,331 +640,633 @@ interface MemoryParticle {
 `
 })
 export class AppComponent implements OnInit, OnDestroy {
-  // Services
   private geminiService = inject(GeminiService);
 
-  // View Children
+  @ViewChild('reportNode') reportNode!: ElementRef;
   @ViewChild('bgmInput') bgmInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('reportNode') reportNode!: ElementRef<HTMLDivElement>;
 
-  // Signals
+  // App States: 'intro' -> 'color-selection' -> 'unlocking' -> 'questions' -> ...
   viewState = signal<'intro' | 'color-selection' | 'unlocking' | 'questions' | 'loading' | 'results'>('intro');
-  isDemoMode = this.geminiService.isDemoModeSignal;
   
   // Color Selection
-  colorOptions: YearColor[] = [
-    { 
-      id: 'warm', name: '赤陶', desc: 'Warm Terracotta', 
-      previewClass: 'bg-[#E27D60]', 
-      capsuleTop: '#E27D60', capsuleBottom: '#C35B40',
-      aiContext: 'Warm, passionate, energetic, earthy',
-      particleType: 'stone', particleColor: '#E27D60'
+  selectedColor = signal<YearColor | null>(null);
+  
+  // Memory Particles (The pile of stones/feathers)
+  memoryParticles = signal<MemoryParticle[]>([]);
+  
+  // Audio State
+  isAudioPlaying = signal(false);
+  // Default to false (pessimistic) - only set true if 'canplay' fires
+  hasAudioSource = signal(false); 
+  private audio: HTMLAudioElement | null = null;
+
+  readonly colorOptions: YearColor[] = [
+    {
+      id: 'sunshine',
+      name: '阳光金 · Sunshine',
+      desc: '流动的光斑，温暖的定力。',
+      previewClass: 'bg-gradient-to-br from-[#E6C767] to-[#B8933A]',
+      capsuleTop: 'linear-gradient(135deg, #E6C767, #D4AC0D)',
+      capsuleBottom: 'linear-gradient(45deg, #B8933A, #E6C767)',
+      aiContext: 'Sunshine Gold. Tone: Radiant, warm, optimistic, confident but grounded. Focus on brightness, hope, and clarity. Like the noon sun warming the earth.',
+      particleType: 'stone',
+      particleColor: 'rgba(230, 199, 103, 0.9)'
     },
-    { 
-      id: 'nature', name: '苔绿', desc: 'Moss Green', 
-      previewClass: 'bg-[#85A286]', 
-      capsuleTop: '#85A286', capsuleBottom: '#6B856C',
-      aiContext: 'Natural, growth, healing, calm',
-      particleType: 'feather', particleColor: '#85A286'
+    {
+      id: 'serene',
+      name: '静谧蓝 · Serene',
+      desc: '深海的沉默，理性的回响。',
+      previewClass: 'bg-gradient-to-br from-[#8E9AAF] to-[#2C3E50]',
+      capsuleTop: 'linear-gradient(135deg, #8E9AAF, #4A5D75)',
+      capsuleBottom: 'linear-gradient(45deg, #2C3E50, #8E9AAF)',
+      aiContext: 'Serene Blue. Tone: Calm, deep, intellectual, slightly melancholic but peaceful. Like the deep sea.',
+      particleType: 'feather',
+      particleColor: 'rgba(142, 154, 175, 0.6)'
     },
-    { 
-      id: 'calm', name: '雾蓝', desc: 'Foggy Blue', 
-      previewClass: 'bg-[#89ABE3]', 
-      capsuleTop: '#89ABE3', capsuleBottom: '#6A8CC3',
-      aiContext: 'Calm, rational, melancholic, deep',
-      particleType: 'feather', particleColor: '#89ABE3'
+    {
+      id: 'mint',
+      name: '薄荷绿 · Healing',
+      desc: '新生的缝隙，治愈的呼吸。',
+      previewClass: 'bg-gradient-to-br from-[#A6B08E] to-[#5F6B4E]',
+      capsuleTop: 'linear-gradient(135deg, #A6B08E, #7A8568)',
+      capsuleBottom: 'linear-gradient(45deg, #5F6B4E, #A6B08E)',
+      aiContext: 'Sage/Mint Green. Tone: Healing, organic, growing, fresh. Focus on recovery and nature.',
+      particleType: 'feather',
+      particleColor: 'rgba(166, 176, 142, 0.6)'
     },
-    { 
-      id: 'minimal', name: '月灰', desc: 'Moon Grey', 
-      previewClass: 'bg-[#D3D3D3]', 
-      capsuleTop: '#D3D3D3', capsuleBottom: '#B0B0B0',
-      aiContext: 'Minimalist, objective, balanced, silent',
-      particleType: 'stone', particleColor: '#A9A9A9'
+    {
+      id: 'stoic',
+      name: '沉稳灰 · Stoic',
+      desc: '极简的留白，内向的秩序。',
+      previewClass: 'bg-gradient-to-br from-[#C4C4C4] to-[#4A4A4A]',
+      capsuleTop: 'linear-gradient(135deg, #C4C4C4, #777777)',
+      capsuleBottom: 'linear-gradient(45deg, #4A4A4A, #999999)',
+      aiContext: 'Stoic Gray. Tone: Minimalist, rational, objective, quiet, strong. Focus on structure and truth.',
+      particleType: 'stone',
+      particleColor: 'rgba(150, 150, 150, 0.8)'
     },
-    { 
-      id: 'vintage', name: '琥珀', desc: 'Amber', 
-      previewClass: 'bg-[#E6C229]', 
-      capsuleTop: '#E6C229', capsuleBottom: '#CBA618',
-      aiContext: 'Vintage, nostalgic, warm memory, precious',
-      particleType: 'feather', particleColor: '#E6C229'
+    {
+      id: 'maple',
+      name: '枫叶红 · Maple',
+      desc: '燃烧的诗意，成熟的深情。',
+      previewClass: 'bg-gradient-to-br from-[#D96C63] to-[#8F3630]',
+      capsuleTop: 'linear-gradient(135deg, #D96C63, #A6423A)',
+      capsuleBottom: 'linear-gradient(45deg, #8F3630, #D96C63)',
+      aiContext: 'Maple Red. Tone: Deep, mature, passionate, poetic, autumnal. Focus on harvest, settling, rich emotions, and the beauty of passing time.',
+      particleType: 'feather', // Leaves float
+      particleColor: 'rgba(217, 108, 99, 0.8)'
     }
   ];
-  selectedColor = signal<YearColor | null>(null);
 
-  // Unlocking
+  currentStep = signal(0);
+  answers = signal<Record<string, string>>({});
+  
+  // Unlock Logic
   unlockProgress = signal(0);
   isUnlocking = signal(false);
   private unlockInterval: any;
-
-  // Questions
-  questions: Question[] = [
-    { id: '1', category: 'Recall', textZh: '2025年，哪一个瞬间让你觉得“活着真好”？', textEn: 'A moment you felt truly alive.', placeholder: '那是初夏的...' },
-    { id: '2', category: 'Connection', textZh: '这一年，谁是你最意想不到的相遇？', textEn: 'The most unexpected encounter.', placeholder: '在书店...' },
-    { id: '3', category: 'Letting Go', textZh: '你终于放下了什么？', textEn: 'What did you finally let go of?', placeholder: '对他/她的执念...' },
-    { id: '4', category: 'Achievement', textZh: '哪怕微不足道，哪件事是你坚持最久的？', textEn: 'Something you persisted in.', placeholder: '每天早起...' },
-    { id: '5', category: 'Self', textZh: '用一个词形容你的2025年。', textEn: 'One word for your 2025.', placeholder: '重建...' }
-  ];
-  currentStep = signal(0);
-  currentQuestion = computed(() => this.questions[this.currentStep()]);
-  progress = computed(() => ((this.currentStep() + 1) / this.questions.length) * 100);
   
-  answers = signal<Record<string, string>>({});
+  // Analysis Data
+  analysisResult = signal<AnalysisResult | null>(null);
   
-  // Inspiration
+  // Computed property to split letter into paragraphs for proper indentation
+  letterParagraphs = computed(() => {
+    const body = this.analysisResult()?.letterBody || '';
+    // Split by newlines, filter out empty strings
+    return body.split(/\n+/).map(p => p.trim()).filter(p => p.length > 0);
+  });
+  
+  // Inspiration Feature
   currentInspiration = signal<string | null>(null);
   isGettingInspiration = signal(false);
 
-  // Particles
-  memoryParticles = signal<MemoryParticle[]>([]);
-
-  // Checkpoint
+  // UI Feedback
   showCheckpoint = signal(false);
   checkpointMessage = signal('');
-
-  // Analysis
-  analysisResult = signal<AnalysisResult | null>(null);
-  letterParagraphs = computed(() => {
-    const body = this.analysisResult()?.letterBody;
-    return body ? body.split('\n').filter(p => p.trim().length > 0) : [];
-  });
-
+  
   // Chat
-  chatHistory = signal<{role: string, parts: string}[]>([]);
   chatInput = signal('');
+  chatHistory = signal<{role: string, parts: string}[]>([]);
+  isChatLoading = signal(false);
 
-  // Report
-  generatedReportUrl = signal<string | null>(null);
+  // Report Generation
   isGeneratingReport = signal(false);
+  generatedReportUrl = signal<string | null>(null);
 
-  // Audio
-  private audio = new Audio();
-  isAudioPlaying = signal(false);
-  hasAudioSource = signal(false);
+  // Questions Data
+  readonly questions: Question[] = [
+    // Group 1: Life Records
+    { 
+      id: 'q1', 
+      category: '生活实录 (Life Records)', 
+      textZh: '年度私藏：2025 年，哪一件被你带回家的物件，最真切地抚平了你的生活？', 
+      textEn: 'Which object brought home this year most truly soothed your life?',
+      placeholder: '哪怕是一个普通的杯子，只要它曾温暖你...' 
+    },
+    { 
+      id: 'q2', 
+      category: '生活实录 (Life Records)', 
+      textZh: '栖息之地：除了床和工位，这一年哪个角落承载了你最多的发呆或思考时刻？', 
+      textEn: 'Besides your bed and desk, which corner held your most moments of daydreaming or thinking?',
+      placeholder: '那个让你感到安全的角落是哪里？' 
+    },
+    { 
+      id: 'q3', 
+      category: '生活实录 (Life Records)', 
+      textZh: '耳边回响：哪一段旋律响起时，能让你瞬间辨认出 2025 年的味道？', 
+      textEn: 'Which melody, when played, instantly makes you recognize the flavor of 2025?',
+      placeholder: '或许是一句歌词，或许是雨声...' 
+    },
+    { 
+      id: 'q4', 
+      category: '生活实录 (Life Records)', 
+      textZh: '生命韵律：这一年，你的身体是在规律的节奏中自洽，还是在疲惫的缝隙里喘息？', 
+      textEn: 'This year, was your body consistent in rhythm, or gasping for breath in the cracks of fatigue?',
+      placeholder: '诚实地面对身体的感受，它会告诉你答案。' 
+    },
+    { 
+      id: 'q5', 
+      category: '生活实录 (Life Records)', 
+      textZh: '视觉切片：翻开手机相册，哪张照片或截图是你 2025 年最不舍得删去的记忆锚点？', 
+      textEn: 'Opening your photo album, which photo or screenshot is the memory anchor you are most reluctant to delete?',
+      placeholder: '描述那个画面，不用在意构图，只在意回忆。' 
+    },
+    
+    // Group 2: Action Traces
+    { 
+      id: 'q6', 
+      category: '行动痕迹 (Action Traces)', 
+      textZh: '微光技能：今年你点亮了哪项以前从未尝试过的小技能，让生活多了一点底气？', 
+      textEn: 'What small skill did you light up this year that you had never tried before, adding a bit of confidence to life?',
+      placeholder: '哪怕只是学会了做一道菜...' 
+    },
+    { 
+      id: 'q7', 
+      category: '行动痕迹 (Action Traces)', 
+      textZh: '长情刻度：这一年，你最执着、甚至有些“笨拙”地坚持下来的一件事是什么？', 
+      textEn: 'What is the one thing you persisted in this year, perhaps obsessively or even "clumsily"?',
+      placeholder: '那些看似无用的坚持，往往最珍贵。' 
+    },
+    { 
+      id: 'q8', 
+      category: '行动痕迹 (Action Traces)', 
+      textZh: '远方投生：2025 年，哪次抵达让你觉得短暂地逃离了平庸，见到了不一样的风景？', 
+      textEn: 'In 2025, which arrival made you feel like you briefly escaped mediocrity and saw a different scenery?',
+      placeholder: '不一定是旅行，也可以是心灵的抵达。' 
+    },
+    { 
+      id: 'q9', 
+      category: '行动痕迹 (Action Traces)', 
+      textZh: '清空仪式：今年你从生命中彻底丢弃或告别的最沉重的一样东西（实物或旧物）是什么？', 
+      textEn: 'What was the heaviest thing (physical or past) that you completely discarded or said goodbye to this year?',
+      placeholder: '放手的那一刻，你的感受是？' 
+    },
+    { 
+      id: 'q10', 
+      category: '行动痕迹 (Action Traces)', 
+      textZh: '职业剪影：在工作或学业的奔波中，哪一个瞬间让你感受到“终于熬过来了”的如释重负？', 
+      textEn: 'In the rush of work or study, which moment made you feel the relief of "finally surviving it"?',
+      placeholder: '哪怕只有几秒钟的轻松...' 
+    },
+
+    // Group 3: Human Connections
+    { 
+      id: 'q11', 
+      category: '人际连接 (Connections)', 
+      textZh: '频繁坐标：谁是你 2025 年通讯录里那个最常亮起、也最让你安心的名字？', 
+      textEn: 'Who is the name in your 2025 contacts that lit up most often and brought you the most peace?',
+      placeholder: '写下那个名字，或者那个称呼。' 
+    },
+    { 
+      id: 'q12', 
+      category: '人际连接 (Connections)', 
+      textZh: '意外相逢：今年哪一位新相识的人，像一束光一样照亮了你某个认知盲区？', 
+      textEn: 'Which new acquaintance this year illuminated a cognitive blind spot like a beam of light?',
+      placeholder: '他/她说的一句话，让你记到了现在...' 
+    },
+    { 
+      id: 'q13', 
+      category: '人际连接 (Connections)', 
+      textZh: '无名暖意：记录一个来自陌生人或世界的微小善意，它曾在哪个寒冷的时刻治愈过你？', 
+      textEn: 'Record a tiny kindness from a stranger or the world that healed you in a cold moment.',
+      placeholder: '那个瞬间，世界变得温柔了吗？' 
+    },
+    { 
+      id: 'q14', 
+      category: '人际连接 (Connections)', 
+      textZh: '关系的减法：这一年，你淡出了哪一段不再产生共振的关系，找回了多少自在？', 
+      textEn: 'Which relationship that no longer resonated did you fade out of this year, and how much freedom did you regain?',
+      placeholder: '离开也是一种成长。' 
+    },
+
+    // Group 4: Emotional Fragments
+    { 
+      id: 'q15', 
+      category: '情绪碎片 (Emotional Fragments)', 
+      textZh: '精神避难所：当世界喧嚣或压力来袭时，你习惯躲进哪种习惯或爱好中悄悄“回血”？', 
+      textEn: 'When the world is noisy or stressful, what habit or hobby do you hide in to quietly "regenerate"?',
+      placeholder: '那里只有你和安宁。' 
+    },
+    { 
+      id: 'q16', 
+      category: '情绪碎片 (Emotional Fragments)', 
+      textZh: '年度旁白：如果给你的 2025 配上一个高频出现的口头禅，那个词会是什么？', 
+      textEn: 'If you were to dub your 2025 with a frequently used catchphrase, what would it be?',
+      placeholder: '是你对自己说得最多的一句话。' 
+    },
+    { 
+      id: 'q17', 
+      category: '情绪碎片 (Emotional Fragments)', 
+      textZh: '泪水出口：今年哪一次被文艺作品（书影音）击中的瞬间，让你借由他人的故事流了自己的泪？', 
+      textEn: 'Which moment struck by a literary/artistic work (book/movie/music) made you cry your own tears through another\'s story?',
+      placeholder: '是感动，还是释怀？' 
+    },
+    { 
+      id: 'q18', 
+      category: '情绪碎片 (Emotional Fragments)', 
+      textZh: '破壳瞬间：2025 年，你做过最勇敢、最不顾后果的一次“自我主张”是什么？', 
+      textEn: 'In 2025, what was the bravest, most reckless act of "self-assertion" you performed?',
+      placeholder: '那一刻，你只听从了自己。' 
+    },
+
+    // Group 5: Farewell & Handoff
+    { 
+      id: 'q19', 
+      category: '告别与交棒 (Farewell)', 
+      textZh: '生命色彩：如果 2025 年是一块画布，你会为它涂抹上怎样的底色和评分？', 
+      textEn: 'If 2025 were a canvas, what background color and score would you give it?',
+      placeholder: '颜色代表心情，分数代表无悔。' 
+    },
+    { 
+      id: 'q20', 
+      category: '告别与交棒 (Farewell)', 
+      textZh: '通关密语：跨过 2025 的门槛，你想对那个在未来守候的自己，预留一个什么词作为接头暗号？', 
+      textEn: 'Crossing the threshold of 2025, what word do you want to leave as a secret code for your future self?',
+      placeholder: '一个词，连接现在与未来。' 
+    }
+  ];
 
   constructor() {
-    this.audio.loop = true;
-  }
+    try {
+      this.audio = new Audio();
+      this.audio.loop = true;
+      this.audio.volume = 0.5;
+      
+      const audioPath = 'assets/bgm.mp3';
+      this.audio.src = audioPath;
+      
+      this.audio.onerror = (e) => {
+        console.warn(`Could not load audio from ${audioPath}.`, e);
+        this.hasAudioSource.set(false);
+      };
 
+      this.audio.oncanplay = () => {
+        this.hasAudioSource.set(true);
+      };
+
+      this.audio.load();
+    } catch (e) {
+      console.warn("Audio initialization failed completely. App will continue silent.", e);
+      this.hasAudioSource.set(false);
+    }
+  }
+  
   ngOnInit() {
-    // Initial check
+    // Force view refresh in case constructor state was missed
+    this.viewState.set('intro');
   }
 
   ngOnDestroy() {
-    this.audio.pause();
-    if (this.unlockInterval) clearInterval(this.unlockInterval);
-  }
-
-  // Audio Methods
-  onBgmFileSelected(event: Event) {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      this.audio.src = url;
-      this.hasAudioSource.set(true);
-      this.audio.play().then(() => this.isAudioPlaying.set(true)).catch(() => {});
+    if (this.audio) {
+      this.audio.pause();
+      this.audio.src = '';
     }
   }
 
   toggleAudio() {
-    if (!this.hasAudioSource()) return;
+    if (!this.audio) return;
+    
+    // If hasAudioSource is false, it means loading failed or file missing.
+    // Trigger upload immediately.
+    if (!this.hasAudioSource()) {
+      alert("无法加载默认音乐 (assets/bgm.mp3)。\n请检查文件是否上传，或现在手动选择一首本地音乐。");
+      this.bgmInput.nativeElement.click();
+      return;
+    }
+
     if (this.audio.paused) {
-      this.audio.play();
-      this.isAudioPlaying.set(true);
+      this.audio.play().then(() => {
+         this.isAudioPlaying.set(true);
+      }).catch(e => {
+         console.warn('Playback prevented', e);
+         // If error is NotSupported or NotAllowed, it's autoplay policy.
+         // If error is 404 related (sometimes shows as encoding error), fallback to upload.
+         if (e.code === 4) { // NotSupportedError (often missing source)
+             this.hasAudioSource.set(false);
+             this.bgmInput.nativeElement.click();
+         }
+      });
     } else {
       this.audio.pause();
       this.isAudioPlaying.set(false);
     }
   }
 
-  // Navigation
+  onBgmFileSelected(event: Event) {
+    if (!this.audio) return;
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0];
+      const objectUrl = URL.createObjectURL(file);
+      
+      this.audio.src = objectUrl;
+      this.audio.load();
+      // Force true because user just selected a valid file
+      this.hasAudioSource.set(true);
+      
+      this.audio.play().then(() => {
+        this.isAudioPlaying.set(true);
+      }).catch(e => console.error(e));
+    }
+  }
+
+  progress = computed(() => {
+    return ((this.currentStep() + 1) / this.questions.length) * 100;
+  });
+
+  currentQuestion = computed(() => this.questions[this.currentStep()]);
+
   startJourney() {
+    // Attempt to play audio if loaded
+    if (this.audio && this.hasAudioSource() && this.audio.paused) {
+        this.toggleAudio();
+    }
+    
+    // Go to Color Selection first
     this.viewState.set('color-selection');
+  }
+
+  // ** NEW: RESET FUNCTION **
+  // Strictly clears all previous memory state
+  resetJourney() {
+    // 1. Clear Answers
+    this.answers.set({});
+    
+    // 2. Clear Chat History
+    this.chatHistory.set([]);
+    
+    // 3. Clear Analysis
+    this.analysisResult.set(null);
+    
+    // 4. Reset Steps
+    this.currentStep.set(0);
+    this.unlockProgress.set(0);
+    
+    // 5. Reset Particles
+    this.memoryParticles.set([]);
+
+    // 6. Reset Color (Optional, but good for total reset)
+    this.selectedColor.set(null);
+
+    // 7. Reset View
+    this.viewState.set('intro');
   }
 
   confirmColor(color: YearColor) {
     this.selectedColor.set(color);
+    
+    // Transition to Unlock
+    this.unlockProgress.set(0);
     this.viewState.set('unlocking');
   }
 
-  // Unlocking Logic
+  // Unlock Logic
   startUnlock() {
+    if (this.unlockProgress() >= 100) return;
+    
     this.isUnlocking.set(true);
+    
+    // Clear any existing interval just in case
+    clearInterval(this.unlockInterval);
+    
+    // Fill in 2 seconds (20ms * 100 steps)
     this.unlockInterval = setInterval(() => {
-      this.unlockProgress.update(v => {
-        if (v >= 100) {
-          clearInterval(this.unlockInterval);
-          this.viewState.set('questions');
+      this.unlockProgress.update(val => {
+        if (val >= 100) {
+          this.completeUnlock();
           return 100;
         }
-        return v + 2; // Speed
+        return val + 1.5; // Tuning speed
       });
-    }, 30);
+    }, 20);
   }
 
   endUnlock() {
-    this.isUnlocking.set(false);
+    // If not complete, reset
     if (this.unlockProgress() < 100) {
       clearInterval(this.unlockInterval);
-      // Decay
-      const decay = setInterval(() => {
-        this.unlockProgress.update(v => {
-          if (v <= 0) {
-            clearInterval(decay);
-            return 0;
-          }
-          return v - 5;
+      this.isUnlocking.set(false);
+      
+      // Animate back to 0 rapidly
+      const decrease = setInterval(() => {
+        this.unlockProgress.update(val => {
+           if (val <= 0) {
+             clearInterval(decrease);
+             return 0;
+           }
+           return val - 5;
         });
       }, 10);
     }
   }
 
-  // Questions Logic
-  getAnswerFor(id: string) {
-    return this.answers()[id] || '';
-  }
-
-  handleBack() {
-    if (this.currentStep() > 0) {
-      this.currentStep.update(v => v - 1);
-      this.currentInspiration.set(null);
-    }
-  }
-
-  handleAnswer(answer: string) {
-    const q = this.currentQuestion();
-    this.answers.update(curr => ({ ...curr, [q.id]: answer }));
+  completeUnlock() {
+    clearInterval(this.unlockInterval);
     
-    // Add particle
-    this.addParticle();
-
-    // Checkpoint feedback
-    if (this.currentStep() === 2) {
-      this.showCheckpointToast('Memory Fragment Saved');
+    // Haptic feedback if available
+    if (navigator.vibrate) {
+      navigator.vibrate([50, 50, 200]);
     }
-
-    if (this.currentStep() < this.questions.length - 1) {
-      this.currentStep.update(v => v + 1);
-      this.currentInspiration.set(null);
-    } else {
-      this.submitAll();
-    }
-  }
-
-  addParticle() {
-    const color = this.selectedColor();
-    if (!color) return;
     
-    const p: MemoryParticle = {
-      id: Date.now(),
-      type: color.particleType,
-      left: Math.random() * 80 + 10, // 10-90%
-      bottom: -20,
-      rotation: Math.random() * 360,
-      scale: 0.5 + Math.random() * 0.5,
-      color: color.particleColor,
-      borderRadius: color.particleType === 'stone' ? `${30 + Math.random() * 40}%` : undefined,
-      animationDelay: '0s'
-    };
-    
-    this.memoryParticles.update(curr => [...curr, p]);
-  }
-
-  showCheckpointToast(msg: string) {
-    this.checkpointMessage.set(msg);
-    this.showCheckpoint.set(true);
-    setTimeout(() => this.showCheckpoint.set(false), 2000);
+    // Small delay for the visual "open" animation to play
+    setTimeout(() => {
+      this.viewState.set('questions');
+    }, 800);
   }
 
   async getInspiration() {
     if (this.isGettingInspiration()) return;
     this.isGettingInspiration.set(true);
+    this.currentInspiration.set(null); // clear old
+
     try {
-      const q = this.currentQuestion();
-      const text = await this.geminiService.generateInspiration(q.textZh);
-      this.currentInspiration.set(text);
+      // Pass both languages to context but ask for a prompt
+      const hint = await this.geminiService.generateInspiration(this.currentQuestion().textZh);
+      this.currentInspiration.set(hint);
     } catch (e) {
       console.error(e);
+      this.currentInspiration.set("闭上眼睛深呼吸，答案就在你心里。 (Close your eyes, the answer is within.)");
     } finally {
       this.isGettingInspiration.set(false);
     }
   }
 
-  async submitAll() {
-    this.viewState.set('loading');
-    try {
-      const result = await this.geminiService.generateYearReview(this.answers(), this.selectedColor()?.aiContext || 'Warm');
-      // If it returns { text: jsonString }, parse it
-      let parsed = result;
-      if (result && result.text && typeof result.text === 'string') {
-          // It might be markdown code block
-          let clean = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
-          try {
-            parsed = JSON.parse(clean);
-          } catch(e) {
-             console.error('JSON parse failed', e);
-             // Fallback
-             parsed = {
-               keywords: [],
-               portrait: { mentalCore: '', actionPattern: '', emotionalTone: '' },
-               letterTitle: 'Error Parsing',
-               letterBody: result.text
-             };
-          }
+  handleAnswer(answer: string) {
+    const q = this.currentQuestion();
+    
+    // Save answer
+    const currentAnswers = { ...this.answers() };
+    currentAnswers[q.id] = answer;
+    this.answers.set(currentAnswers);
+    
+    // Add Memory Particle Visual
+    this.addMemoryParticle();
+
+    // Clear inspiration for next question
+    this.currentInspiration.set(null);
+
+    const stepIndex = this.currentStep();
+    
+    // Check for "checkpoint" every 4-5 questions
+    if (stepIndex < this.questions.length - 1) {
+      if ((stepIndex + 1) % 5 === 0) {
+        this.triggerCheckpoint(stepIndex + 1);
       }
-      this.analysisResult.set(parsed);
-      
-      // Init chat
-      this.chatHistory.set([{ role: 'model', parts: '我是你的2025年记忆。你想问我什么？' }]);
-      
-      this.viewState.set('results');
-    } catch (e) {
-      console.error(e);
-      // Go back or show error
-      this.viewState.set('questions');
+      this.currentStep.update(i => i + 1);
+    } else {
+      this.finishAndAnalyze();
     }
   }
 
-  resetJourney() {
-    this.answers.set({});
-    this.currentStep.set(0);
-    this.viewState.set('intro');
-    this.memoryParticles.set([]);
+  addMemoryParticle() {
+    const color = this.selectedColor();
+    if (!color) return;
+
+    const index = this.memoryParticles().length;
+    
+    // Tighter pile for corner accumulation (Mountain Shape)
+    // Base width decreases as it goes up (pyramid/mountain shape)
+    // Adjusted range to be tighter: 120px base spread reducing by 4px per item
+    const spread = Math.max(20, 120 - index * 4); 
+    const randomXOffset = (Math.random() - 0.5) * spread;
+    
+    // Height increases slowly to build density
+    const heightBase = index * 6;
+    const randomYOffset = Math.random() * 10;
+
+    // Create organic border radius for stones
+    const borderRadius = color.particleType === 'stone' 
+      ? `${Math.floor(30 + Math.random()*40)}% ${Math.floor(30 + Math.random()*40)}% ${Math.floor(30 + Math.random()*40)}% ${Math.floor(30 + Math.random()*40)}%`
+      : undefined;
+
+    const particle: MemoryParticle = {
+      id: Date.now(),
+      type: color.particleType,
+      left: randomXOffset, // Relative to center of the corner container
+      bottom: heightBase + randomYOffset,
+      rotation: Math.random() * 360,
+      scale: 0.8 + Math.random() * 0.4,
+      color: color.particleColor,
+      borderRadius: borderRadius,
+      animationDelay: '0ms'
+    };
+
+    this.memoryParticles.update(prev => [...prev, particle]);
   }
 
-  // Chat
+  triggerCheckpoint(count: number) {
+    let msg = '';
+    if (count === 5) msg = "正在把你的烟火气装入信封... (Collecting your sparks...)";
+    else if (count === 10) msg = "听起来，那是很温柔的一年。 (Sounds like a gentle year.)";
+    else if (count === 15) msg = "那些情绪的碎片，都已妥善安放。 (Fragments safely stored.)";
+    
+    if (msg) {
+      this.checkpointMessage.set(msg);
+      this.showCheckpoint.set(true);
+      setTimeout(() => {
+        this.showCheckpoint.set(false);
+      }, 3000); 
+    }
+  }
+
+  handleBack() {
+    if (this.currentStep() > 0) {
+      this.currentStep.update(i => i - 1);
+      this.currentInspiration.set(null);
+    }
+  }
+
+  async finishAndAnalyze() {
+    this.viewState.set('loading');
+    
+    try {
+      const colorContext = this.selectedColor()?.aiContext || "Neutral";
+      // This sends ONLY the current 'answers' signal to AI. 
+      // Since we reset answers in 'resetJourney', this is safe.
+      const response = await this.geminiService.generateYearReview(this.answers(), colorContext);
+      const text = response.text || '{}';
+      const jsonStr = text.replace(/```json\n?|\n?```/g, '').trim();
+      
+      const data = JSON.parse(jsonStr) as AnalysisResult;
+      this.analysisResult.set(data);
+      
+      // Initialize Chat history with ONLY current answers
+      this.chatHistory.set([
+        { role: 'user', parts: JSON.stringify(this.answers()) },
+        { role: 'model', parts: "我已小心珍藏你的记忆。让我们开始对话吧。(I have stored your memories gently. Let us reflect.)" }
+      ]);
+      
+      this.viewState.set('results');
+    } catch (err) {
+      console.error('Failed to analyze', err);
+      alert('连接记忆库中断，请重试。(Connection interrupted, please try again.)');
+      this.viewState.set('questions'); 
+    }
+  }
+
   async sendChatMessage() {
     const msg = this.chatInput().trim();
     if (!msg) return;
 
-    this.chatHistory.update(h => [...h, { role: 'user', parts: msg }]);
+    const oldHistory = this.chatHistory();
+    this.chatHistory.set([...oldHistory, { role: 'user', parts: msg }]);
     this.chatInput.set('');
+    this.isChatLoading.set(true);
 
     try {
-      const response = await this.geminiService.chatWithYear(this.chatHistory(), msg);
+      const response = await this.geminiService.chatWithYear(oldHistory, msg);
       this.chatHistory.update(h => [...h, { role: 'model', parts: response }]);
     } catch (e) {
-       this.chatHistory.update(h => [...h, { role: 'model', parts: '... (Connection Error)' }]);
+      console.error(e);
+    } finally {
+      this.isChatLoading.set(false);
     }
   }
 
-  // Report
+  getAnswerFor(qId: string): string {
+    return this.answers()[qId] || '';
+  }
+
   async generateReport() {
+    if (!this.reportNode) return;
     this.isGeneratingReport.set(true);
-    // wait for render
+    
+    // Small delay to ensure render
     setTimeout(async () => {
-       if (typeof html2canvas !== 'undefined' && this.reportNode) {
-          try {
-            const canvas = await html2canvas(this.reportNode.nativeElement, {
-              scale: 2,
-              useCORS: true,
-              backgroundColor: '#F9F7F2'
-            });
-            this.generatedReportUrl.set(canvas.toDataURL('image/png'));
-          } catch (e) {
-            console.error(e);
-          }
-       }
-       this.isGeneratingReport.set(false);
+      try {
+        const canvas = await html2canvas(this.reportNode.nativeElement, {
+          scale: 2, // High resolution
+          useCORS: true,
+          backgroundColor: '#F2F0E9'
+        });
+        
+        this.generatedReportUrl.set(canvas.toDataURL('image/png'));
+      } catch (e) {
+        console.error("Report generation failed", e);
+        alert("无法生成图片，请重试 (Cannot generate image)");
+      } finally {
+        this.isGeneratingReport.set(false);
+      }
     }, 100);
   }
 
@@ -992,11 +1276,13 @@ export class AppComponent implements OnInit, OnDestroy {
 
   downloadReport() {
     const url = this.generatedReportUrl();
-    if (url) {
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = '2025-Memory-Capsule.png';
-      link.click();
-    }
+    if (!url) return;
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `2025_Memory_Capsule_${Date.now()}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 }

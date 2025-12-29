@@ -1,15 +1,17 @@
 
-import 'zone.js';
-import '@angular/compiler';
+import '@angular/compiler'; // JIT Compiler
 import { bootstrapApplication } from '@angular/platform-browser';
+import { provideZonelessChangeDetection } from '@angular/core';
 import { AppComponent } from './app.component';
 
-console.log('App starting...');
+console.log('Main.ts: Bootstrapping...');
 
 bootstrapApplication(AppComponent, {
-  providers: []
+  providers: [
+    provideZonelessChangeDetection()
+  ]
 }).then(() => {
-  console.log('Angular App Bootstrapped');
+  console.log('Bootstrap success');
   const loader = document.getElementById('loading-container');
   if (loader) loader.style.display = 'none';
 }).catch(err => {
