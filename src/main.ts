@@ -1,19 +1,20 @@
 
-import '@angular/compiler'; // JIT Compiler
+import '@angular/compiler'; // Required for JIT in Vite
 import { bootstrapApplication } from '@angular/platform-browser';
 import { provideZonelessChangeDetection } from '@angular/core';
 import { AppComponent } from './app.component';
 
-console.log('Main.ts: Bootstrapping...');
+console.log('App: Bootstrapping...');
 
 bootstrapApplication(AppComponent, {
   providers: [
     provideZonelessChangeDetection()
   ]
 }).then(() => {
-  console.log('Bootstrap success');
+  console.log('App: Bootstrap Successful');
+  // Remove loader
   const loader = document.getElementById('loading-container');
   if (loader) loader.style.display = 'none';
 }).catch(err => {
-  console.error('Bootstrap failed', err);
+  console.error('App: Bootstrap Failed', err);
 });

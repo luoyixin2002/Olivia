@@ -7,7 +7,7 @@
   <title>2025 记忆胶囊 | Memory Capsule</title>
   <base href="/">
   
-  <!-- Tailwind CSS -->
+  <!-- Tailwind CSS (CDN is fine for simple usage) -->
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Html2Canvas -->
@@ -16,12 +16,6 @@
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500&family=Great+Vibes&display=swap" rel="stylesheet">
   
-  <script>
-    // Polyfill for process.env.API_KEY to work in browser if not replaced by Vite
-    window.process = window.process || {};
-    window.process.env = window.process.env || {};
-  </script>
-
   <script>
     tailwind.config = {
       theme: {
@@ -39,6 +33,12 @@
         }
       }
     }
+  </script>
+
+  <!-- Critical: Polyfill for process.env to prevent runtime crashes if Vite replacement misses anything -->
+  <script>
+    window.process = window.process || {};
+    window.process.env = window.process.env || {};
   </script>
 
   <style>
@@ -83,13 +83,13 @@
     "rxjs/webSocket": "https://esm.sh/rxjs@^7.8.2/webSocket?conditions=es2015",
     "rxjs/testing": "https://esm.sh/rxjs@^7.8.2/testing?conditions=es2015",
     "rxjs/fetch": "https://esm.sh/rxjs@^7.8.2/fetch?conditions=es2015",
+    "zone.js": "https://esm.sh/zone.js@^0.16.0?external=rxjs",
     "@angular/compiler": "https://esm.sh/@angular/compiler@^21.0.6?external=rxjs",
     "@angular/platform-browser": "https://esm.sh/@angular/platform-browser@^21.0.6?external=rxjs",
     "@angular/core": "https://esm.sh/@angular/core@^21.0.6?external=rxjs",
     "@angular/common": "https://esm.sh/@angular/common@^21.0.6?external=rxjs",
     "@angular/forms": "https://esm.sh/@angular/forms@^21.0.6?external=rxjs",
-    "vite": "https://esm.sh/vite@^7.3.0?external=rxjs",
-    "zone.js": "https://esm.sh/zone.js@^0.16.0?external=rxjs"
+    "vite": "https://esm.sh/vite@^7.3.0?external=rxjs"
   }
 }
 </script>
@@ -109,6 +109,7 @@
   </app-root>
 
   <script>
+    // Global error handler
     window.addEventListener('error', function(event) {
       const errorMsg = document.getElementById('load-error-msg');
       const errorText = document.getElementById('error-text');
