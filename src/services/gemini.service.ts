@@ -1,5 +1,5 @@
 
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 // Interfaces for DeepSeek/OpenAI compatible API
 interface ChatMessage {
@@ -22,7 +22,9 @@ export class GeminiService {
   // DeepSeek V3 Endpoint
   private readonly API_URL = 'https://api.deepseek.com/chat/completions';
   private apiKey: string = '';
-  private isDemoMode = false;
+  
+  // Expose as signal for UI binding
+  public isDemoModeSignal = signal(false);
 
   constructor() {
     this.init();
@@ -32,8 +34,6 @@ export class GeminiService {
     let key = '';
 
     // Vercel / Vite Environment Variable Handling
-    // Vite replaces 'process.env.API_KEY' with the actual string during build.
-    // We access it directly so the replacement works.
     try {
       // @ts-ignore
       const envKey = process.env.API_KEY;
@@ -42,7 +42,6 @@ export class GeminiService {
       }
     } catch (e) {}
 
-    // Fallback: Check window shim (often used in simple HTML wrappers or local dev)
     if (!key) {
       try {
         key = (window as any).process?.env?.API_KEY || '';
@@ -56,8 +55,8 @@ export class GeminiService {
     console.log(`[DeepSeek Service] Initializing. API Key: ${keyStatus}`);
     
     if (!this.apiKey || this.apiKey === 'undefined') {
-      console.warn('DeepSeek Service: No API Key found. Make sure to set API_KEY in Vercel Environment Variables.');
-      this.isDemoMode = true;
+      console.warn('DeepSeek Service: No API Key found. Running in Demo Mode.');
+      this.isDemoModeSignal.set(true);
     }
   }
 
@@ -65,7 +64,7 @@ export class GeminiService {
    * Core Helper to call DeepSeek API
    */
   private async callDeepSeek(messages: ChatMessage[], temperature = 1.3, jsonMode = false): Promise<string> {
-    if (this.isDemoMode) throw new Error('Demo Mode');
+    if (this.isDemoModeSignal()) throw new Error('Demo Mode');
 
     try {
       const response = await fetch(this.API_URL, {
@@ -98,9 +97,9 @@ export class GeminiService {
   }
 
   async generateInspiration(questionText: string): Promise<string> {
-    if (this.isDemoMode) {
+    if (this.isDemoModeSignal()) {
       await this.delay(800);
-      return "（离线灵感）\n灵感 1: 试着回忆那个午后的阳光。\n灵感 2: 也许是一次微不足道的相遇。";
+      return "（演示模式）\n灵感 1: 试着回忆那个午后的阳光。\n灵感 2: 也许是一次微不足道的相遇。";
     }
 
     const systemPrompt = `
@@ -130,7 +129,7 @@ export class GeminiService {
   }
 
   async generateYearReview(answers: Record<string, string>, colorContext: string): Promise<any> {
-    if (this.isDemoMode) {
+    if (this.isDemoModeSignal()) {
       await this.delay(3000);
       return this.getMockAnalysisResult(colorContext);
     }
@@ -172,15 +171,12 @@ export class GeminiService {
     `;
 
     try {
-      // Explicitly mention JSON in system prompt for DeepSeek JSON mode
       const result = await this.callDeepSeek([
         { role: 'system', content: '你是一个输出 JSON 格式的专业作家助手。请确保输出合法的 JSON 字符串。' },
         { role: 'user', content: prompt }
-      ], 1.1, true); // JSON Mode = true
+      ], 1.1, true);
       
-      return {
-        text: result
-      };
+      return { text: result };
 
     } catch (error) {
       console.error("DeepSeek Generation Error", error);
@@ -190,9 +186,9 @@ export class GeminiService {
   }
 
   async chatWithYear(history: {role: string, parts: string}[], message: string): Promise<string> {
-    if (this.isDemoMode) {
+    if (this.isDemoModeSignal()) {
       await this.delay(1000);
-      return "（离线模式）你的这一年充满了故事，我能感受到你在其中的成长与变化。";
+      return "（演示模式）你的这一年充满了故事，我能感受到你在其中的成长与变化。\n(Demo Mode: Please configure API_KEY)";
     }
 
     const messages: ChatMessage[] = [
@@ -246,7 +242,7 @@ export class GeminiService {
             emotionalTone: `正如你选择的底色，这一年你的基调是${isWarm ? '温暖而坚定' : '冷静而深邃'}的。`
         },
         letterTitle: "致 2025 的漫步者",
-        letterBody: "亲爱的，见信如晤。\n\n当我翻阅你刚刚写下的这些答案，我仿佛看到你在这一年的光影里穿行的背影。虽然暂时无法通过DeepSeek连接到你的故事，但我依然能从这些只言片语中，感受到你心脏跳动的频率。\n\n2025 年对你来说，或许并不是波澜壮阔的一年，但一定是在细节处见真章的一年。你在那些看似不起眼的瞬间里——一个发呆的午后，一次勇敢的拒绝，或是一首循环播放的老歌——完成了自我的重塑。你不再急于向世界证明什么，而是更愿意花时间与自己相处，这份“向内”的力量，是你今年最大的收获。\n\n不用遗憾我们未能通过网络相连，因为最深刻的答案，往往不需要AI来生成，它就藏在你敲下每一个字符时的犹豫与坚定里。\n\n愿你在未来的日子里，继续保持这份对生活的敏感与深情。\n\n在 2026 的入口处，请带上这份勇气。"
+        letterBody: "亲爱的，见信如晤。\n\n【提示：您当前处于演示模式，请配置 API Key 以获得个性化生成内容】\n\n当我翻阅你刚刚写下的这些答案，我仿佛看到你在这一年的光影里穿行的背影。虽然暂时无法通过DeepSeek连接到你的故事，但我依然能从这些只言片语中，感受到你心脏跳动的频率。\n\n2025 年对你来说，或许并不是波澜壮阔的一年，但一定是在细节处见真章的一年。你在那些看似不起眼的瞬间里——一个发呆的午后，一次勇敢的拒绝，或是一首循环播放的老歌——完成了自我的重塑。你不再急于向世界证明什么，而是更愿意花时间与自己相处，这份“向内”的力量，是你今年最大的收获。\n\n不用遗憾我们未能通过网络相连，因为最深刻的答案，往往不需要AI来生成，它就藏在你敲下每一个字符时的犹豫与坚定里。\n\n愿你在未来的日子里，继续保持这份对生活的敏感与深情。\n\n在 2026 的入口处，请带上这份勇气。"
       };
       
       return {

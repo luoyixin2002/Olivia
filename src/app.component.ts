@@ -5,7 +5,6 @@ import { QuestionCardComponent, Question } from './components/question-card.comp
 import { GeminiService } from './services/gemini.service';
 import { JellyCapsuleDirective } from './directives/jelly-capsule.directive';
 
-// Declare html2canvas globally as it is loaded via script tag
 declare var html2canvas: any;
 
 interface AnalysisResult {
@@ -23,27 +22,23 @@ interface YearColor {
   id: string;
   name: string;
   desc: string;
-  // Visuals
   previewClass: string;
-  // CSS Gradients for the capsule
   capsuleTop: string;
   capsuleBottom: string;
-  // AI Context
   aiContext: string;
-  // Particle Type for visual feedback
   particleType: 'stone' | 'feather'; 
-  particleColor: string; // CSS color string
+  particleColor: string;
 }
 
 interface MemoryParticle {
   id: number;
   type: 'stone' | 'feather';
-  left: number; // percentage or px offset
-  bottom: number; // px offset
+  left: number;
+  bottom: number;
   rotation: number;
   scale: number;
   color: string;
-  borderRadius?: string; // for stones
+  borderRadius?: string;
   animationDelay: string;
 }
 
@@ -52,6 +47,27 @@ interface MemoryParticle {
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, QuestionCardComponent, JellyCapsuleDirective],
+  styles: [`
+    .particle-drop { animation: dropIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+    @keyframes dropIn { from { transform: translateY(-50px) scale(0); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+    .particle-float { animation: float 3s ease-in-out infinite; }
+    @keyframes float { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-10px) rotate(5deg); } }
+    .animate-spin-slow { animation: spin 8s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .typing-cursor::after { content: '|'; animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+    .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .capsule-bg { position: absolute; border-radius: 50%; filter: blur(60px); opacity: 0.6; }
+    .capsule-liquid { width: 100%; height: 100%; background: var(--liquid-color); border-radius: 50%; animation: liquidMorph 10s infinite alternate; }
+    @keyframes liquidMorph { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+    .paper-texture { background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E"); }
+    .shake-gentle { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 40%, 60% { transform: translate3d(4px, 0, 0); } }
+    .writing-vertical-rl { writing-mode: vertical-rl; text-orientation: upright; }
+    .capsule-open-top { transform: translateY(-40px); }
+    .capsule-open-bottom { transform: translateY(40px); }
+  `],
   template: `
 <div class="min-h-screen w-full relative overflow-x-hidden flex flex-col items-center justify-center p-6 bg-morandi-bg text-morandi-text">
   
@@ -74,8 +90,15 @@ interface MemoryParticle {
     </div>
   </div>
 
+  <!-- API KEY WARNING BANNER -->
+  @if(isDemoMode()) {
+    <div class="fixed top-0 left-0 w-full bg-morandi-red/90 text-white text-[10px] md:text-xs py-1 px-4 text-center z-[100] tracking-widest font-sans">
+       ⚠️ DEMO MODE: API Key Not Found. (Using Mock Data)
+    </div>
+  }
+
   <!-- FLOATING MUSIC PLAYER (Top Right) -->
-  <div class="fixed top-6 right-6 z-50 flex flex-col items-end gap-2 fade-in">
+  <div class="fixed top-6 right-6 z-50 flex flex-col items-end gap-2 fade-in" [class.mt-6]="isDemoMode()">
      <div class="flex items-center gap-2">
        <!-- Local File Input (Hidden) -->
        <input type="file" #bgmInput (change)="onBgmFileSelected($event)" accept="audio/*" class="hidden">
@@ -131,7 +154,7 @@ interface MemoryParticle {
 
   <main class="relative z-10 w-full max-w-5xl flex flex-col items-center pointer-events-none">
     <!-- Header (Minimalist) -->
-    <header class="absolute top-0 left-0 w-full flex justify-center py-8 pointer-events-none">
+    <header class="absolute top-0 left-0 w-full flex justify-center py-8 pointer-events-none" [class.mt-8]="isDemoMode()">
       <div class="flex flex-col items-center gap-2">
          <span class="text-[10px] md:text-xs tracking-[0.4em] uppercase text-morandi-text/40 font-sans">Project 2025</span>
       </div>
@@ -344,6 +367,10 @@ interface MemoryParticle {
         <div class="w-16 h-16 border-t-2 border-b-2 border-morandi-dark/30 rounded-full animate-spin mb-8"></div>
         <h3 class="text-xl md:text-2xl font-serif text-morandi-dark mb-4 tracking-widest">正在打捞记忆...</h3>
         <p class="text-xs font-sans uppercase tracking-[0.2em] text-morandi-text/40">Weaving your story</p>
+        
+        @if(isDemoMode()) {
+            <p class="text-xs text-morandi-red mt-4">(Generating Mock Data...)</p>
+        }
       </div>
     }
 
@@ -630,107 +657,129 @@ interface MemoryParticle {
 </div>
 `
 })
-export class AppComponent implements OnDestroy, OnInit {
+export class AppComponent implements OnInit, OnDestroy {
+  // Services
   private geminiService = inject(GeminiService);
 
-  // State
-  viewState = signal<'intro' | 'color-selection' | 'unlocking' | 'questions' | 'loading' | 'results'>('intro');
-  
-  // Data
-  questions: Question[] = [
-    { id: 'q1', category: '回顾 · Review', textZh: '如果要用一个词形容你的2025，会是什么？', textEn: 'If you could sum up 2025 in one word, what would it be?', placeholder: '例如：重生、破碎、寻找...' },
-    { id: 'q2', category: '回顾 · Review', textZh: '这一年，你最想感谢的人是谁？为什么？', textEn: 'Who are you most grateful to this year, and why?' },
-    { id: 'q3', category: '遗憾 · Regret', textZh: '今年最大的遗憾是什么？', textEn: 'What is your biggest regret of the year?' },
-    { id: 'q4', category: '成就 · Achievement', textZh: '哪一刻让你觉得自己“做到了”？', textEn: 'When did you feel a sense of accomplishment?' },
-    { id: 'q5', category: '改变 · Change', textZh: '相比去年，你最大的变化发生在哪个方面？', textEn: 'How have you changed the most compared to last year?' },
-    { id: 'q6', category: '失去 · Loss', textZh: '这一年你失去了什么？', textEn: 'What did you lose this year?' },
-    { id: 'q7', category: '获得 · Gain', textZh: '这一年你意外获得了什么？', textEn: 'What did you unexpectedly gain?' },
-    { id: 'q8', category: '习惯 · Habit', textZh: '你养成（或戒掉）了什么习惯？', textEn: 'What habit did you form or break?' },
-    { id: 'q9', category: '旅行 · Travel', textZh: '去过印象最深的地方是哪里？', textEn: 'Where was the most memorable place you visited?' },
-    { id: 'q10', category: '书籍/影音 · Media', textZh: '哪本书或电影深深触动了你？', textEn: 'Which book or movie touched you deeply?' },
-    { id: 'q11', category: '瞬间 · Moment', textZh: '描述一个你想永远定格的画面。', textEn: 'Describe a moment you wish you could freeze in time.' },
-    { id: 'q12', category: '挑战 · Challenge', textZh: '今年遇到的最大困难是如何克服的？', textEn: 'How did you overcome your biggest challenge?' },
-    { id: 'q13', category: '关系 · Relationship', textZh: '你与谁的关系发生了微妙的变化？', textEn: 'Whose relationship with you changed subtly?' },
-    { id: 'q14', category: '自我 · Self', textZh: '你更喜欢现在的自己吗？', textEn: 'Do you like yourself more now?' },
-    { id: 'q15', category: '领悟 · Insight', textZh: '今年哪怕再小的一个领悟是？', textEn: 'What is one small insight you gained?' },
-    { id: 'q16', category: '未竟 · Unfinished', textZh: '还有什么想做但没做的事？', textEn: 'What remains undone?' },
-    { id: 'q17', category: '勇气 · Courage', textZh: '你做过最勇敢的决定是什么？', textEn: 'What was the bravest decision you made?' },
-    { id: 'q18', category: '未来 · Future', textZh: '对2026的一个具体期待。', textEn: 'One specific expectation for 2026.' },
-    { id: 'q19', category: '约定 · Promise', textZh: '想对自己许下一个什么承诺？', textEn: 'What promise do you want to make to yourself?' },
-    { id: 'q20', category: '终章 · Finale', textZh: '如果在2025的最后一天写一句话给未来的自己。', textEn: 'A sentence to your future self on the last day of 2025.' }
-  ];
+  // View Children
+  @ViewChild('bgmInput') bgmInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('reportNode') reportNode!: ElementRef<HTMLDivElement>;
 
-  answers = signal<Record<string, string>>({});
+  // Signals
+  viewState = signal<'intro' | 'color-selection' | 'unlocking' | 'questions' | 'loading' | 'results'>('intro');
+  isDemoMode = this.geminiService.isDemoModeSignal;
+  
+  // Color Selection
+  colorOptions: YearColor[] = [
+    { 
+      id: 'warm', name: '赤陶', desc: 'Warm Terracotta', 
+      previewClass: 'bg-[#E27D60]', 
+      capsuleTop: '#E27D60', capsuleBottom: '#C35B40',
+      aiContext: 'Warm, passionate, energetic, earthy',
+      particleType: 'stone', particleColor: '#E27D60'
+    },
+    { 
+      id: 'nature', name: '苔绿', desc: 'Moss Green', 
+      previewClass: 'bg-[#85A286]', 
+      capsuleTop: '#85A286', capsuleBottom: '#6B856C',
+      aiContext: 'Natural, growth, healing, calm',
+      particleType: 'feather', particleColor: '#85A286'
+    },
+    { 
+      id: 'calm', name: '雾蓝', desc: 'Foggy Blue', 
+      previewClass: 'bg-[#89ABE3]', 
+      capsuleTop: '#89ABE3', capsuleBottom: '#6A8CC3',
+      aiContext: 'Calm, rational, melancholic, deep',
+      particleType: 'feather', particleColor: '#89ABE3'
+    },
+    { 
+      id: 'minimal', name: '月灰', desc: 'Moon Grey', 
+      previewClass: 'bg-[#D3D3D3]', 
+      capsuleTop: '#D3D3D3', capsuleBottom: '#B0B0B0',
+      aiContext: 'Minimalist, objective, balanced, silent',
+      particleType: 'stone', particleColor: '#A9A9A9'
+    },
+    { 
+      id: 'vintage', name: '琥珀', desc: 'Amber', 
+      previewClass: 'bg-[#E6C229]', 
+      capsuleTop: '#E6C229', capsuleBottom: '#CBA618',
+      aiContext: 'Vintage, nostalgic, warm memory, precious',
+      particleType: 'feather', particleColor: '#E6C229'
+    }
+  ];
+  selectedColor = signal<YearColor | null>(null);
+
+  // Unlocking
+  unlockProgress = signal(0);
+  isUnlocking = signal(false);
+  private unlockInterval: any;
+
+  // Questions
+  questions: Question[] = [
+    { id: '1', category: 'Recall', textZh: '2025年，哪一个瞬间让你觉得“活着真好”？', textEn: 'A moment you felt truly alive.', placeholder: '那是初夏的...' },
+    { id: '2', category: 'Connection', textZh: '这一年，谁是你最意想不到的相遇？', textEn: 'The most unexpected encounter.', placeholder: '在书店...' },
+    { id: '3', category: 'Letting Go', textZh: '你终于放下了什么？', textEn: 'What did you finally let go of?', placeholder: '对他/她的执念...' },
+    { id: '4', category: 'Achievement', textZh: '哪怕微不足道，哪件事是你坚持最久的？', textEn: 'Something you persisted in.', placeholder: '每天早起...' },
+    { id: '5', category: 'Self', textZh: '用一个词形容你的2025年。', textEn: 'One word for your 2025.', placeholder: '重建...' }
+  ];
   currentStep = signal(0);
-  
-  // Computed
-  progress = computed(() => ((this.currentStep() + 1) / this.questions.length) * 100);
   currentQuestion = computed(() => this.questions[this.currentStep()]);
+  progress = computed(() => ((this.currentStep() + 1) / this.questions.length) * 100);
   
-  // Logic needed for Inspiration
+  answers = signal<Record<string, string>>({});
+  
+  // Inspiration
   currentInspiration = signal<string | null>(null);
   isGettingInspiration = signal(false);
 
-  // Checkpoint UI
+  // Particles
+  memoryParticles = signal<MemoryParticle[]>([]);
+
+  // Checkpoint
   showCheckpoint = signal(false);
   checkpointMessage = signal('');
-  
-  // Results
+
+  // Analysis
   analysisResult = signal<AnalysisResult | null>(null);
-  letterParagraphs = computed(() => this.analysisResult() ? this.analysisResult()!.letterBody.split('\\n').filter(p => p.trim()) : []);
-  
-  // Report Generation
-  isGeneratingReport = signal(false);
-  generatedReportUrl = signal<string | null>(null);
-  @ViewChild('reportNode') reportNode!: ElementRef;
+  letterParagraphs = computed(() => {
+    const body = this.analysisResult()?.letterBody;
+    return body ? body.split('\n').filter(p => p.trim().length > 0) : [];
+  });
 
   // Chat
   chatHistory = signal<{role: string, parts: string}[]>([]);
   chatInput = signal('');
 
+  // Report
+  generatedReportUrl = signal<string | null>(null);
+  isGeneratingReport = signal(false);
+
   // Audio
-  audio = new Audio();
+  private audio = new Audio();
   isAudioPlaying = signal(false);
   hasAudioSource = signal(false);
 
-  // Color Selection
-  colorOptions: YearColor[] = [
-    { id: 'warm', name: '赤陶 · Terra', desc: '温暖、炽热、生命力', previewClass: 'bg-[#C17C74]', capsuleTop: '#D6A692', capsuleBottom: '#C17C74', aiContext: 'Terra Cotta (Warm, Passionate, Vitality)', particleType: 'stone', particleColor: '#C17C74' },
-    { id: 'calm', name: '雾蓝 · Haze', desc: '冷静、理智、深邃', previewClass: 'bg-[#8CA6B0]', capsuleTop: '#A6B0BC', capsuleBottom: '#7A8F9C', aiContext: 'Haze Blue (Calm, Rational, Deep)', particleType: 'feather', particleColor: '#8CA6B0' },
-    { id: 'nature', name: '苔绿 · Moss', desc: '生长、治愈、平和', previewClass: 'bg-[#8F9E8B]', capsuleTop: '#A6B08E', capsuleBottom: '#7D8C78', aiContext: 'Moss Green (Growth, Healing, Peace)', particleType: 'feather', particleColor: '#8F9E8B' },
-    { id: 'light', name: '月白 · Moon', desc: '纯粹、开始、空灵', previewClass: 'bg-[#EAE6DA]', capsuleTop: '#F2EFE9', capsuleBottom: '#DED8C9', aiContext: 'Moon White (Pure, Beginning, Ethereal)', particleType: 'stone', particleColor: '#EAE6DA' },
-    { id: 'dark', name: '墨灰 · Ink', desc: '沉淀、力量、未知', previewClass: 'bg-[#4A4A4A]', capsuleTop: '#666666', capsuleBottom: '#333333', aiContext: 'Ink Grey (Sedimentation, Power, Unknown)', particleType: 'stone', particleColor: '#4A4A4A' }
-  ];
-  selectedColor = signal<YearColor | undefined>(undefined);
-
-  // Unlocking
-  isUnlocking = signal(false);
-  unlockProgress = signal(0);
-  unlockInterval: any;
-
-  // Particles
-  memoryParticles = signal<MemoryParticle[]>([]);
+  constructor() {
+    this.audio.loop = true;
+  }
 
   ngOnInit() {
-    this.audio.addEventListener('ended', () => {
-       // Loop manual handling if needed, but .loop = true handles it.
-    });
+    // Initial check
   }
 
   ngOnDestroy() {
-    if (this.unlockInterval) clearInterval(this.unlockInterval);
     this.audio.pause();
+    if (this.unlockInterval) clearInterval(this.unlockInterval);
   }
 
-  // --- Audio ---
-  onBgmFileSelected(event: any) {
-    const file = event.target.files[0];
+  // Audio Methods
+  onBgmFileSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
     if (file) {
       const url = URL.createObjectURL(file);
       this.audio.src = url;
-      this.audio.loop = true;
       this.hasAudioSource.set(true);
-      this.audio.play().then(() => this.isAudioPlaying.set(true)).catch(e => console.error(e));
+      this.audio.play().then(() => this.isAudioPlaying.set(true)).catch(() => {});
     }
   }
 
@@ -745,129 +794,112 @@ export class AppComponent implements OnDestroy, OnInit {
     }
   }
 
-  // --- Journey Flow ---
+  // Navigation
   startJourney() {
     this.viewState.set('color-selection');
   }
 
   confirmColor(color: YearColor) {
     this.selectedColor.set(color);
-    setTimeout(() => {
-        this.viewState.set('unlocking');
-    }, 300);
+    this.viewState.set('unlocking');
   }
 
+  // Unlocking Logic
   startUnlock() {
     this.isUnlocking.set(true);
-    // Clear existing to avoid double speed
-    if (this.unlockInterval) clearInterval(this.unlockInterval);
-    
     this.unlockInterval = setInterval(() => {
       this.unlockProgress.update(v => {
         if (v >= 100) {
           clearInterval(this.unlockInterval);
-          this.finishUnlock();
+          this.viewState.set('questions');
           return 100;
         }
-        return v + 2; // speed
+        return v + 2; // Speed
       });
-    }, 20);
+    }, 30);
   }
 
   endUnlock() {
     this.isUnlocking.set(false);
-    clearInterval(this.unlockInterval);
     if (this.unlockProgress() < 100) {
-       // Decay logic? Or reset. Resetting feels like "failed attempt".
-       const decay = setInterval(() => {
-          this.unlockProgress.update(v => {
-             if (v <= 0) {
-                clearInterval(decay);
-                return 0;
-             }
-             return v - 5;
-          });
-       }, 20);
+      clearInterval(this.unlockInterval);
+      // Decay
+      const decay = setInterval(() => {
+        this.unlockProgress.update(v => {
+          if (v <= 0) {
+            clearInterval(decay);
+            return 0;
+          }
+          return v - 5;
+        });
+      }, 10);
     }
   }
 
-  finishUnlock() {
-     setTimeout(() => {
-        this.viewState.set('questions');
-     }, 600);
-  }
-
-  // --- Questions Logic ---
+  // Questions Logic
   getAnswerFor(id: string) {
     return this.answers()[id] || '';
   }
 
-  handleAnswer(answer: string) {
-    // Save answer
-    const qId = this.currentQuestion().id;
-    this.answers.update(prev => ({ ...prev, [qId]: answer }));
-    
-    // Add particle visual for feeling of accumulation
-    this.addParticle();
-
-    // Move next or finish
-    if (this.currentStep() < this.questions.length - 1) {
-       // Checkpoints
-       if (this.currentStep() === 4) this.triggerCheckpoint("记忆的轮廓逐渐清晰...");
-       if (this.currentStep() === 9) this.triggerCheckpoint("一半的旅程，一半的感悟...");
-       if (this.currentStep() === 14) this.triggerCheckpoint("就要抵达内心深处了...");
-       
-       this.currentStep.update(i => i + 1);
-       this.currentInspiration.set(null); // Clear hint
-    } else {
-       // Finish
-       this.finishQuestions();
-    }
-  }
-
   handleBack() {
     if (this.currentStep() > 0) {
-      this.currentStep.update(i => i - 1);
+      this.currentStep.update(v => v - 1);
       this.currentInspiration.set(null);
     }
   }
 
-  triggerCheckpoint(msg: string) {
-    this.checkpointMessage.set(msg);
-    this.showCheckpoint.set(true);
-    setTimeout(() => this.showCheckpoint.set(false), 3000);
+  handleAnswer(answer: string) {
+    const q = this.currentQuestion();
+    this.answers.update(curr => ({ ...curr, [q.id]: answer }));
+    
+    // Add particle
+    this.addParticle();
+
+    // Checkpoint feedback
+    if (this.currentStep() === 2) {
+      this.showCheckpointToast('Memory Fragment Saved');
+    }
+
+    if (this.currentStep() < this.questions.length - 1) {
+      this.currentStep.update(v => v + 1);
+      this.currentInspiration.set(null);
+    } else {
+      this.submitAll();
+    }
   }
 
   addParticle() {
     const color = this.selectedColor();
     if (!color) return;
     
-    const id = Date.now();
-    const particle: MemoryParticle = {
-      id,
+    const p: MemoryParticle = {
+      id: Date.now(),
       type: color.particleType,
-      color: color.particleColor,
-      left: Math.random() * 100, // %
-      bottom: Math.random() * 20, // px jitter
+      left: Math.random() * 80 + 10, // 10-90%
+      bottom: -20,
       rotation: Math.random() * 360,
       scale: 0.5 + Math.random() * 0.5,
-      animationDelay: Math.random() * 2 + 's',
-      borderRadius: color.particleType === 'stone' ? 
-         `${30 + Math.random()*40}% ${30 + Math.random()*40}% ${30 + Math.random()*40}% ${30 + Math.random()*40}%` : undefined
+      color: color.particleColor,
+      borderRadius: color.particleType === 'stone' ? `${30 + Math.random() * 40}%` : undefined,
+      animationDelay: '0s'
     };
+    
+    this.memoryParticles.update(curr => [...curr, p]);
+  }
 
-    this.memoryParticles.update(list => [...list, particle]);
+  showCheckpointToast(msg: string) {
+    this.checkpointMessage.set(msg);
+    this.showCheckpoint.set(true);
+    setTimeout(() => this.showCheckpoint.set(false), 2000);
   }
 
   async getInspiration() {
     if (this.isGettingInspiration()) return;
-    
     this.isGettingInspiration.set(true);
-    const q = this.currentQuestion();
-    
     try {
-      const hint = await this.geminiService.generateInspiration(q.textZh);
-      this.currentInspiration.set(hint);
+      const q = this.currentQuestion();
+      const text = await this.geminiService.generateInspiration(q.textZh);
+      this.currentInspiration.set(text);
     } catch (e) {
       console.error(e);
     } finally {
@@ -875,93 +907,83 @@ export class AppComponent implements OnDestroy, OnInit {
     }
   }
 
-  async finishQuestions() {
+  async submitAll() {
     this.viewState.set('loading');
-    
-    // Prepare data
-    const colorContext = this.selectedColor()?.aiContext || 'Unknown';
-    
     try {
-      const result = await this.geminiService.generateYearReview(this.answers(), colorContext);
-      
-      // Parse result text (it should be JSON)
-      let parsed: AnalysisResult;
-      try {
-         // Clean potential markdown code blocks
-         let text = result.text.trim();
-         if (text.startsWith('```json')) {
-            text = text.replace(/^```json/, '').replace(/```$/, '');
-         }
-         parsed = JSON.parse(text);
-      } catch (e) {
-         console.warn('JSON Parse failed, using raw or fallback', e);
-         // Extremely basic fallback if JSON fails completely
-         parsed = {
-            keywords: [{ word: "未知", explanation: "解析失败..." }],
-            portrait: { mentalCore: "...", actionPattern: "...", emotionalTone: "..." },
-            letterTitle: "致 2025",
-            letterBody: result.text // Dump raw text
-         };
+      const result = await this.geminiService.generateYearReview(this.answers(), this.selectedColor()?.aiContext || 'Warm');
+      // If it returns { text: jsonString }, parse it
+      let parsed = result;
+      if (result && result.text && typeof result.text === 'string') {
+          // It might be markdown code block
+          let clean = result.text.replace(/```json/g, '').replace(/```/g, '').trim();
+          try {
+            parsed = JSON.parse(clean);
+          } catch(e) {
+             console.error('JSON parse failed', e);
+             // Fallback
+             parsed = {
+               keywords: [],
+               portrait: { mentalCore: '', actionPattern: '', emotionalTone: '' },
+               letterTitle: 'Error Parsing',
+               letterBody: result.text
+             };
+          }
       }
-      
       this.analysisResult.set(parsed);
       
-      // Initialize Chat History
-      this.chatHistory.set([
-         { role: 'user', parts: `Here is the user's data context: ${JSON.stringify(this.answers())}` },
-         { role: 'model', parts: "你好。我就是你的 2025。这一年我们经历了很多，此刻，你想对我说什么？" }
-      ]);
+      // Init chat
+      this.chatHistory.set([{ role: 'model', parts: '我是你的2025年记忆。你想问我什么？' }]);
       
       this.viewState.set('results');
-
     } catch (e) {
-      console.error('Final Generation Error', e);
-      // Fallback manual error state? Or just stay loading?
-      // In this demo, we assume success or network fallback inside service handles it.
+      console.error(e);
+      // Go back or show error
+      this.viewState.set('questions');
     }
   }
 
-  // --- Results & Chat ---
   resetJourney() {
-    if(confirm('确定要清除所有回答重新开始吗？')) {
-       this.answers.set({});
-       this.currentStep.set(0);
-       this.memoryParticles.set([]);
-       this.viewState.set('intro');
-       // keep audio playing
-    }
+    this.answers.set({});
+    this.currentStep.set(0);
+    this.viewState.set('intro');
+    this.memoryParticles.set([]);
   }
 
+  // Chat
   async sendChatMessage() {
     const msg = this.chatInput().trim();
     if (!msg) return;
 
-    // Optimistic update
     this.chatHistory.update(h => [...h, { role: 'user', parts: msg }]);
     this.chatInput.set('');
 
-    const reply = await this.geminiService.chatWithYear(this.chatHistory(), msg);
-    
-    this.chatHistory.update(h => [...h, { role: 'model', parts: reply }]);
+    try {
+      const response = await this.geminiService.chatWithYear(this.chatHistory(), msg);
+      this.chatHistory.update(h => [...h, { role: 'model', parts: response }]);
+    } catch (e) {
+       this.chatHistory.update(h => [...h, { role: 'model', parts: '... (Connection Error)' }]);
+    }
   }
 
-  // --- Report Gen ---
+  // Report
   async generateReport() {
     this.isGeneratingReport.set(true);
-    await new Promise(r => setTimeout(r, 500)); // wait for UI
-    
-    try {
-        const canvas = await html2canvas(this.reportNode.nativeElement, {
-            scale: 2, // better quality
-            useCORS: true,
-            backgroundColor: '#F9F7F2'
-        });
-        this.generatedReportUrl.set(canvas.toDataURL('image/png'));
-    } catch (e) {
-        console.error('Report Gen Error', e);
-    } finally {
-        this.isGeneratingReport.set(false);
-    }
+    // wait for render
+    setTimeout(async () => {
+       if (typeof html2canvas !== 'undefined' && this.reportNode) {
+          try {
+            const canvas = await html2canvas(this.reportNode.nativeElement, {
+              scale: 2,
+              useCORS: true,
+              backgroundColor: '#F9F7F2'
+            });
+            this.generatedReportUrl.set(canvas.toDataURL('image/png'));
+          } catch (e) {
+            console.error(e);
+          }
+       }
+       this.isGeneratingReport.set(false);
+    }, 100);
   }
 
   closeReportModal() {
@@ -970,11 +992,11 @@ export class AppComponent implements OnDestroy, OnInit {
 
   downloadReport() {
     const url = this.generatedReportUrl();
-    if (!url) return;
-    
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `2025-Memory-Capsule.png`;
-    link.click();
+    if (url) {
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '2025-Memory-Capsule.png';
+      link.click();
+    }
   }
 }
